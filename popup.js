@@ -162,9 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
     input.addEventListener('change', () => saveSettings(false));
   });
 
-  // 家事按分の入力フィールドも自動保存
+  // 家事按分の入力フィールドも自動保存（0-100に制限）
   Object.values(allocInputs).forEach(input => {
-    input.addEventListener('change', () => saveSettings(false));
+    input.addEventListener('change', () => {
+      let value = parseInt(input.value, 10);
+      if (!isNaN(value)) {
+        if (value < 0) value = 0;
+        if (value > 100) value = 100;
+        input.value = value;
+      }
+      saveSettings(false);
+    });
   });
 
   // ステータス表示
