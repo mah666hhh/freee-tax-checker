@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const additionalInfoInput = document.getElementById('additionalInfo');
   const enabledToggle = document.getElementById('enabled');
   const autoRegisterToggle = document.getElementById('autoRegister');
-  const saveBtn = document.getElementById('saveBtn');
   const statusDiv = document.getElementById('status');
   const resetUsageBtn = document.getElementById('resetUsage');
 
@@ -153,9 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
-  // 保存ボタンクリック
-  saveBtn.addEventListener('click', () => saveSettings(true));
 
   // 各入力フィールドの変更時に自動保存
   const autoSaveInputs = [
