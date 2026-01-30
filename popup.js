@@ -19,6 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusDiv = document.getElementById('status');
   const resetUsageBtn = document.getElementById('resetUsage');
 
+  // 家事按分入力要素
+  const allocInputs = {
+    rent: document.getElementById('alloc_rent'),
+    utilities: document.getElementById('alloc_utilities'),
+    communication: document.getElementById('alloc_communication'),
+    supplies: document.getElementById('alloc_supplies'),
+    vehicle: document.getElementById('alloc_vehicle'),
+    travel: document.getElementById('alloc_travel')
+  };
+
   // 使用量表示要素
   const checkCountEl = document.getElementById('checkCount');
   const inputTokensEl = document.getElementById('inputTokens');
@@ -34,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'additionalInfo',
     'enabled',
     'autoRegister',
-    'usage'
+    'usage',
+    'allocations'
   ], (result) => {
     if (result.apiKey) apiKeyInput.value = result.apiKey;
     if (result.model) modelSelect.value = result.model;
@@ -43,10 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (result.additionalInfo) additionalInfoInput.value = result.additionalInfo;
     if (result.enabled !== undefined) enabledToggle.checked = result.enabled;
     if (result.autoRegister !== undefined) autoRegisterToggle.checked = result.autoRegister;
-    
+
+    // 家事按分設定を読み込み
+    if (result.allocations) {
+      for (const [key, input] of Object.entries(allocInputs)) {
+        if (result.allocations[key] !== undefined && result.allocations[key] !== null) {
+          input.value = result.allocations[key];
+        }
+      }
+    }
+
     // 使用量を表示
     updateUsageDisplay(result.usage, result.model || 'claude-haiku-4-5-20251001');
-    
+
     // 料金表示を更新
     updatePricingDisplay(result.model || 'claude-haiku-4-5-20251001');
   });
@@ -106,6 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 設定を保存
   saveBtn.addEventListener('click', () => {
+    // 家事按分設定を収集
+    const allocations = {};
+    for (const [key, input] of Object.entries(allocInputs)) {
+      const value = input.value.trim();
+      if (value !== '') {
+        allocations[key] = parseInt(value, 10);
+      }
+    }
+
     const settings = {
       apiKey: apiKeyInput.value.trim(),
       model: modelSelect.value,
@@ -113,12 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
       industry: industrySelect.value,
       additionalInfo: additionalInfoInput.value.trim(),
       enabled: enabledToggle.checked,
-      autoRegister: autoRegisterToggle.checked
+      autoRegister: autoRegisterToggle.checked,
+      allocations: allocations
     };
 
     chrome.storage.local.set(settings, () => {
       showStatus('設定を保存しました ✓', 'success');
-      
+
       // 3秒後にステータスを消す
       setTimeout(() => {
         statusDiv.className = 'status';

@@ -49,11 +49,39 @@ const SYSTEM_PROMPT = `あなたは元国税調査官として20年の経験を�
   "questions": "調査で聞かれそうな質問（なければ空文字）"
 }`;
 
+// 按分設定を日本語で整形
+function formatAllocations(allocations) {
+  if (!allocations || Object.keys(allocations).length === 0) {
+    return '按分設定なし（全て100%事業用）';
+  }
+
+  const nameMap = {
+    rent: '地代家賃',
+    utilities: '水道光熱費',
+    communication: '通信費',
+    supplies: '消耗品費',
+    vehicle: '車両費',
+    travel: '旅費交通費'
+  };
+
+  const items = [];
+  for (const [key, value] of Object.entries(allocations)) {
+    if (value !== undefined && value !== null) {
+      items.push(`${nameMap[key] || key}: ${value}%`);
+    }
+  }
+
+  return items.length > 0 ? items.join('、') : '按分設定なし（全て100%事業用）';
+}
+
 // Claude APIを呼び出し
 async function callClaudeAPI(apiKey, dealData, businessInfo, model = DEFAULT_MODEL) {
+  const allocationsText = formatAllocations(businessInfo.allocations);
+
   const userPrompt = `## 事業情報
 - 事業内容: ${businessInfo.businessType || '未設定'}
 - 業種: ${businessInfo.industry || '未設定'}
+- 家事按分設定: ${allocationsText}
 - その他: ${businessInfo.additionalInfo || 'なし'}
 
 ## 入力された経費
@@ -65,7 +93,8 @@ async function callClaudeAPI(apiKey, dealData, businessInfo, model = DEFAULT_MOD
 - 日付: ${dealData.date}
 - 口座: ${dealData.wallet || '未設定'}
 
-この経費について、税務リスクを判定してください。`;
+この経費について、税務リスクを判定してください。
+※ 家事按分が設定されている勘定科目は、freee側で按分処理されます。`;
 
   const response = await fetch(CLAUDE_API_URL, {
     method: 'POST',
@@ -180,7 +209,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log('[background] 取引チェックリクエスト受信:', request.dealData);
     
     // 設定を取得してAPI呼び出し
-    chrome.storage.local.get(['apiKey', 'model', 'businessType', 'industry', 'additionalInfo', 'enabled', 'usage'], async (settings) => {
+    chrome.storage.local.get(['apiKey', 'model', 'businessType', 'industry', 'additionalInfo', 'allocations', 'enabled', 'usage'], async (settings) => {
       // チェックが無効の場合はスキップ
       if (settings.enabled === false) {
         sendResponse({ success: true, data: { judgment: '🟢', riskLevel: 1, reason: 'チェック無効', improvement: '', suggestedDescription: '', questions: '' } });
@@ -190,7 +219,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const businessInfo = {
         businessType: settings.businessType || '',
         industry: settings.industry || '',
-        additionalInfo: settings.additionalInfo || ''
+        additionalInfo: settings.additionalInfo || '',
+        allocations: settings.allocations || {}
       };
       
       const model = settings.model || DEFAULT_MODEL;
