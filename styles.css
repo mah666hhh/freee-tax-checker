@@ -1,0 +1,223 @@
+/* styles.css - freee税務チェッカー モーダルスタイル */
+
+/* モーダルオーバーレイ */
+.ftc-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99999;
+  justify-content: center;
+  align-items: center;
+}
+
+.ftc-modal-show {
+  display: flex;
+}
+
+/* モーダルコンテンツ */
+.ftc-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: ftc-slideIn 0.3s ease-out;
+}
+
+@keyframes ftc-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ヘッダー */
+.ftc-modal-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 12px 12px 0 0;
+}
+
+.ftc-header-green {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+}
+
+.ftc-header-yellow {
+  background: linear-gradient(135deg, #fff8e1, #ffecb3);
+}
+
+.ftc-header-red {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+}
+
+.ftc-modal-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.ftc-modal-title {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ftc-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.ftc-modal-close:hover {
+  color: #333;
+}
+
+/* ボディ */
+.ftc-modal-body {
+  padding: 20px;
+}
+
+.ftc-judgment {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.ftc-risk-level {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+/* セクション */
+.ftc-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.ftc-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+.ftc-section p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* サジェストセクション */
+.ftc-suggested {
+  background: #e3f2fd;
+}
+
+.ftc-suggested-text {
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px dashed #90caf9;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.ftc-copy-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ftc-copy-btn:hover {
+  background: #1565c0;
+}
+
+/* 質問セクション */
+.ftc-questions {
+  background: #fff3e0;
+}
+
+/* フッター */
+.ftc-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+  border-radius: 0 0 12px 12px;
+}
+
+.ftc-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ftc-btn-cancel {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #666;
+}
+
+.ftc-btn-cancel:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.ftc-btn-proceed {
+  background: #4caf50;
+  border: none;
+  color: #fff;
+}
+
+.ftc-btn-proceed:hover {
+  background: #43a047;
+}
+
+/* レスポンシブ */
+@media (max-width: 600px) {
+  .ftc-modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .ftc-modal-footer {
+    flex-direction: column;
+  }
+  
+  .ftc-btn {
+    width: 100%;
+  }
+}

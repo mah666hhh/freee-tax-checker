@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>freee税務チェッカー 設定</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      width: 350px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: #f5f5f5;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #2196f3, #1976d2);
+      color: #fff;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 16px;
+    }
+    
+    .section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .section-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: #2196f3;
+      border-radius: 2px;
+    }
+    
+    label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    
+    input[type="text"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #2196f3;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .btn:hover {
+      background: #1976d2;
+    }
+    
+    .btn-secondary {
+      background: #fff;
+      color: #666;
+      border: 1px solid #ddd;
+    }
+    
+    .btn-secondary:hover {
+      background: #f5f5f5;
+    }
+    
+    .status {
+      text-align: center;
+      padding: 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+      display: none;
+    }
+    
+    .status.success {
+      display: block;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status.error {
+      display: block;
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 12px;
+      font-size: 11px;
+      color: #999;
+    }
+    
+    .footer a {
+      color: #2196f3;
+      text-decoration: none;
+    }
+    
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .toggle-label {
+      font-size: 13px;
+      color: #333;
+    }
+    
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+    
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #ccc;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    
+    .toggle-slider::before {
+      position: absolute;
+      content: '';
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    
+    .toggle input:checked + .toggle-slider {
+      background: #4caf50;
+    }
+    
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+    
+    .model-pricing {
+      font-size: 12px;
+      color: #666;
+      margin-top: -8px;
+      margin-bottom: 12px;
+    }
+    
+    .usage-box {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    
+    .usage-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    .usage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    .usage-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    
+    .usage-label {
+      color: #666;
+    }
+    
+    .usage-value {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .usage-item.total {
+      grid-column: 1 / -1;
+      border-top: 1px solid #ddd;
+      padding-top: 8px;
+      margin-top: 4px;
+    }
+    
+    .usage-item.total .usage-value {
+      color: #2196f3;
+      font-weight: 600;
+    }
+    
+    .btn-small {
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: #fff;
+      color: #666;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    
+    .btn-small:hover {
+      background: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🧾 freee税務チェッカー</h1>
+    <p>経費入力時に税務リスクを自動チェック</p>
+  </div>
+  
+  <div class="content">
+    <!-- APIキー設定 -->
+    <div class="section">
+      <div class="section-title">APIキー</div>
+      <label for="apiKey">APIキーを入力</label>
+      <input type="password" id="apiKey" placeholder="sk-ant-xxxxx...">
+      <p style="font-size: 11px; color: #999; margin-top: -8px;">
+        ※ APIキーはローカルに保存され、外部に送信されません
+      </p>
+    </div>
+    
+    <!-- モデル選択 -->
+    <div class="section">
+      <div class="section-title">モデル選択</div>
+      <label for="model">使用するモデル</label>
+      <select id="model">
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5（推奨）</option>
+        <option value="claude-3-5-haiku-20241022">Haiku 3.5</option>
+      </select>
+      <div class="model-pricing">
+        <span id="modelPricing">💰 $1.00 / $5.00 per MTok (入力/出力)</span>
+      </div>
+      
+      <div class="usage-box">
+        <div class="usage-title">📊 今月の使用状況</div>
+        <div class="usage-grid">
+          <div class="usage-item">
+            <span class="usage-label">チェック回数</span>
+            <span class="usage-value" id="checkCount">0 回</span>
+          </div>
+          <div class="usage-item">
+            <span class="usage-label">入力トークン</span>
+            <span class="usage-value" id="inputTokens">0</span>
+          </div>
+          <div class="usage-item">
+            <span class="usage-label">出力トークン</span>
+            <span class="usage-value" id="outputTokens">0</span>
+          </div>
+          <div class="usage-item total">
+            <span class="usage-label">推定コスト</span>
+            <span class="usage-value" id="estimatedCost">$0.0000</span>
+          </div>
+        </div>
+        <button class="btn-small" id="resetUsage">リセット</button>
+      </div>
+    </div>
+    
+    <!-- 事業情報 -->
+    <div class="section">
+      <div class="section-title">事業情報</div>
+      
+      <label for="businessType">事業内容</label>
+      <input type="text" id="businessType" placeholder="例: フリーランスエンジニア + ブログ運営">
+      
+      <label for="industry">業種</label>
+      <select id="industry">
+        <option value="">選択してください</option>
+        <option value="情報通信業">情報通信業</option>
+        <option value="サービス業">サービス業</option>
+        <option value="小売業">小売業</option>
+        <option value="製造業">製造業</option>
+        <option value="建設業">建設業</option>
+        <option value="不動産業">不動産業</option>
+        <option value="その他">その他</option>
+      </select>
+      
+      <label for="additionalInfo">その他の情報（任意）</label>
+      <textarea id="additionalInfo" placeholder="例: 自宅兼事務所、車を事業で使用など"></textarea>
+    </div>
+    
+    <!-- チェック設定 -->
+    <div class="section">
+      <div class="section-title">チェック設定</div>
+      
+      <div class="toggle-row">
+        <span class="toggle-label">チェックを有効にする</span>
+        <label class="toggle">
+          <input type="checkbox" id="enabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      
+      <div class="toggle-row">
+        <span class="toggle-label">🟢判定時は自動で登録</span>
+        <label class="toggle">
+          <input type="checkbox" id="autoRegister" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <button class="btn" id="saveBtn">設定を保存</button>
+    <div class="status" id="status"></div>
+  </div>
+  
+  <div class="footer">
+    <p>© 2026 freee税務チェッカー</p>
+    <p><a href="https://www.malanka.org/" target="_blank">スリ飯屋MaLanka</a></p>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
