@@ -124,8 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 設定を保存
-  saveBtn.addEventListener('click', () => {
+  // 設定を保存する関数
+  function saveSettings(showMessage = true) {
     // 家事按分設定を収集
     const allocations = {};
     for (const [key, input] of Object.entries(allocInputs)) {
@@ -147,13 +147,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     chrome.storage.local.set(settings, () => {
-      showStatus('設定を保存しました ✓', 'success');
-
-      // 3秒後にステータスを消す
-      setTimeout(() => {
-        statusDiv.className = 'status';
-      }, 3000);
+      if (showMessage) {
+        showStatus('保存しました ✓', 'success');
+        setTimeout(() => { statusDiv.className = 'status'; }, 2000);
+      }
     });
+  }
+
+  // 保存ボタンクリック
+  saveBtn.addEventListener('click', () => saveSettings(true));
+
+  // 各入力フィールドの変更時に自動保存
+  const autoSaveInputs = [
+    apiKeyInput, modelSelect, businessTypeInput, industrySelect,
+    additionalInfoInput, enabledToggle, autoRegisterToggle
+  ];
+  autoSaveInputs.forEach(input => {
+    input.addEventListener('change', () => saveSettings(false));
+  });
+
+  // 家事按分の入力フィールドも自動保存
+  Object.values(allocInputs).forEach(input => {
+    input.addEventListener('change', () => saveSettings(false));
   });
 
   // ステータス表示
