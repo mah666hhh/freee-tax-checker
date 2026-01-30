@@ -222,7 +222,7 @@
 
       // ローディング表示
       registerBtn.disabled = true;
-      registerBtn.textContent = 'チェック中...';
+      registerBtn.textContent = 'AIチェック中...（数秒お待ちください）';
 
       // chrome.runtimeが利用可能かチェック
       if (!chrome?.runtime?.sendMessage) {
