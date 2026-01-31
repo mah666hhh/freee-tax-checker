@@ -229,7 +229,14 @@ docs/
 ## 管理用URL一覧
 
 ### Claude
-- コスト確認: https://platform.claude.com/workspaces/default/cost
+- コスト確認: https://console.anthropic.com/settings/cost
+- 使用量制限: https://console.anthropic.com/settings/limits
+
+#### 使用量アラート設定
+1. Monthly limit: 月の上限を設定（超えるとAPI停止）
+2. Email notification: 指定金額でメール通知
+
+例: $1 = 約150円 = 約250回チェック（Haiku 3.5）
 
 ### Google
 - アプリパスワード作成: https://myaccount.google.com/apppasswords
