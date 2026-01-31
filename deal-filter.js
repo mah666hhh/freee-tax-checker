@@ -63,17 +63,109 @@
 
   // パネルの表示/非表示を切り替え
   function togglePanel(show) {
-    const dropdown = document.getElementById('ftc-filter-dropdown');
-    if (typeof show === 'boolean') {
-      panelVisible = show;
-    } else {
-      panelVisible = !panelVisible;
+    // 閉じる場合はチェック不要
+    if (show === false) {
+      panelVisible = false;
+      document.getElementById('ftc-filter-dropdown').style.display = 'none';
+      return;
     }
-    dropdown.style.display = panelVisible ? 'block' : 'none';
 
-    if (panelVisible) {
-      updateAccountList();
-    }
+    // 開く場合はProプランかチェック
+    chrome.storage.local.get(['licenseInfo'], (result) => {
+      if (result.licenseInfo?.plan !== 'paid') {
+        showUpgradePrompt();
+        return;
+      }
+
+      // Proユーザーは通常通りパネル表示
+      const dropdown = document.getElementById('ftc-filter-dropdown');
+      if (typeof show === 'boolean') {
+        panelVisible = show;
+      } else {
+        panelVisible = !panelVisible;
+      }
+      dropdown.style.display = panelVisible ? 'block' : 'none';
+
+      if (panelVisible) {
+        updateAccountList();
+      }
+    });
+  }
+
+  // アップグレード促進モーダル表示
+  function showUpgradePrompt() {
+    // 既存のモーダルがあれば削除
+    const existing = document.getElementById('ftc-upgrade-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'ftc-upgrade-modal';
+    modal.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10001;
+      ">
+        <div style="
+          background: white;
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 360px;
+          text-align: center;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        ">
+          <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+          <h3 style="margin: 0 0 12px; font-size: 18px; color: #333;">
+            Pro機能です
+          </h3>
+          <p style="margin: 0 0 20px; font-size: 14px; color: #666; line-height: 1.6;">
+            勘定科目フィルターはProプラン限定機能です。<br>
+            月額550円（税込）で無制限チェック＋フィルター機能が使えます。
+          </p>
+          <a href="https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ"
+             target="_blank"
+             style="
+               display: block;
+               background: #4CAF50;
+               color: white;
+               padding: 12px 24px;
+               border-radius: 6px;
+               text-decoration: none;
+               font-weight: bold;
+               margin-bottom: 12px;
+             ">
+            Proにアップグレード →
+          </a>
+          <button id="ftc-upgrade-close" style="
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+          ">閉じる</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // 閉じるボタン
+    document.getElementById('ftc-upgrade-close').addEventListener('click', () => {
+      modal.remove();
+    });
+
+    // 背景クリックで閉じる
+    modal.querySelector('div').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        modal.remove();
+      }
+    });
   }
 
   // 勘定科目の説明
