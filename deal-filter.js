@@ -31,7 +31,7 @@
       </button>
       <div id="ftc-filter-dropdown" style="display: none;">
         <div class="ftc-filter-header">
-          <span>勘定科目フィルター</span>
+          <span>勘定科目で表示切替</span>
           <button id="ftc-filter-close">&times;</button>
         </div>
         <div class="ftc-filter-actions">
@@ -40,7 +40,8 @@
         </div>
         <div id="ftc-filter-list"></div>
         <div class="ftc-filter-hint">
-          チェックを外すと非表示になります
+          チェックを外した勘定科目の行を非表示<br>
+          ※ 表示のみ。件数・金額の集計には影響しません
         </div>
       </div>
     `;
