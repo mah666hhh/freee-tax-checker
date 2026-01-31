@@ -4,8 +4,8 @@ import { getUser, resetUsageIfNeeded } from './lib/redis.js';
 // Free: 10回/月（お試し）
 // Paid: 無制限（500円/月）
 const PLAN_LIMITS = {
-  free: 10,
-  paid: null
+  free: 5,   // 5回/月（お試し）
+  paid: null // 無制限（550円/月）
 };
 
 export default async function handler(req, res) {

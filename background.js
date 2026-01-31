@@ -10,13 +10,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     // 設定を取得してAPI呼び出し
     chrome.storage.local.get(['licenseKey', 'businessType', 'industry', 'additionalInfo', 'allocations'], async (settings) => {
-      // ライセンスキーがない場合
-      if (!settings.licenseKey) {
-        sendResponse({
-          success: false,
-          error: '【freee税務チェッカー】ライセンスキーが設定されていません。拡張機能の設定画面からライセンスキーを入力してください。'
-        });
-        return;
+      let licenseKey = settings.licenseKey;
+
+      // ライセンスキーがない場合は自動でFreeキーを取得
+      if (!licenseKey) {
+        console.log('[background] ライセンスキーなし、Freeキーを自動取得');
+        try {
+          const regResponse = await fetch(`${API_BASE_URL}/api/register-free`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const regData = await regResponse.json();
+
+          if (regData.success) {
+            licenseKey = regData.licenseKey;
+            // 取得したキーを保存
+            chrome.storage.local.set({
+              licenseKey: licenseKey,
+              licenseInfo: {
+                plan: 'free',
+                usage: regData.usage
+              }
+            });
+            console.log('[background] Freeキー取得成功:', licenseKey);
+          } else if (regData.existingKey) {
+            // 既にこのIPでFreeキーが発行済み
+            licenseKey = regData.existingKey;
+            chrome.storage.local.set({ licenseKey: licenseKey });
+            console.log('[background] 既存Freeキーを復元:', licenseKey);
+          } else {
+            sendResponse({
+              success: false,
+              error: '【freee税務チェッカー】' + (regData.error || 'Freeキーの取得に失敗しました')
+            });
+            return;
+          }
+        } catch (regError) {
+          console.error('[background] Freeキー取得エラー:', regError);
+          sendResponse({
+            success: false,
+            error: '【freee税務チェッカー】Freeキーの取得に失敗しました: ' + regError.message
+          });
+          return;
+        }
       }
 
       try {
@@ -26,7 +62,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            licenseKey: settings.licenseKey,
+            licenseKey: licenseKey,
             expenseData: {
               type: request.dealData.type,
               accountItem: request.dealData.accountItem,

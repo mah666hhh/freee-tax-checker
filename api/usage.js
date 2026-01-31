@@ -2,8 +2,8 @@ import { getUser, resetUsageIfNeeded } from './lib/redis.js';
 
 // プランごとの制限
 const PLAN_LIMITS = {
-  free: 10,
-  paid: null
+  free: 5,   // 5回/月
+  paid: null // 無制限
 };
 
 export default async function handler(req, res) {

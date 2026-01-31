@@ -7,10 +7,10 @@ import { getUser, incrementUsage, resetUsageIfNeeded } from './lib/redis.js';
 const DEFAULT_MODEL = 'claude-3-5-haiku-20241022';
 
 // プランごとの制限（null = 無制限）
-// Free: 10回/月（お試し）
-// Paid: 無制限（500円/月）
+// Free: 5回/月（お試し）
+// Paid: 無制限（550円/月）
 const PLAN_LIMITS = {
-  free: 10,
+  free: 5,
   paid: null  // 無制限
 };
 

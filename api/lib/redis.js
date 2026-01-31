@@ -67,10 +67,29 @@ export async function resetUsageIfNeeded(licenseKey, user) {
   return parseInt(user.usageCount) || 0;
 }
 
-// ライセンスキー生成
+// ライセンスキー生成（有料用）
 export function generateLicenseKey() {
   const uuid = crypto.randomUUID();
   return `ftc_${uuid}`;
+}
+
+// Freeライセンスキー生成
+export function generateFreeLicenseKey() {
+  const uuid = crypto.randomUUID();
+  return `ftc_free_${uuid}`;
+}
+
+// IPアドレスに紐づくFreeキーを取得
+export async function getFreeKeyByIP(ip) {
+  const r = getRedis();
+  const key = await r.get(`ip:${ip}`);
+  return key;
+}
+
+// IPアドレスとFreeキーを紐付けて保存
+export async function saveIPMapping(ip, licenseKey) {
+  const r = getRedis();
+  await r.set(`ip:${ip}`, licenseKey);
 }
 
 export { getRedis };
