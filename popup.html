@@ -350,49 +350,22 @@
   </div>
 
   <div class="content" id="main-content">
-    <!-- APIキー設定 -->
+    <!-- ライセンスキー設定 -->
     <div class="section">
-      <div class="section-title">APIキー</div>
-      <label for="apiKey">APIキーを入力</label>
-      <input type="password" id="apiKey" placeholder="sk-ant-xxxxx...">
-      <p style="font-size: 11px; color: #999; margin-top: -8px;">
-        ※ APIキーはローカルに保存され、外部に送信されません
-      </p>
-    </div>
-    
-    <!-- モデル選択 -->
-    <div class="section">
-      <div class="section-title">モデル選択</div>
-      <label for="model">使用するモデル</label>
-      <select id="model">
-        <option value="claude-haiku-4-5-20251001">Haiku 4.5（推奨）</option>
-        <option value="claude-3-5-haiku-20241022">Haiku 3.5</option>
-      </select>
-      <div class="model-pricing">
-        <span id="modelPricing">💰 $1.00 / $5.00 per MTok (入力/出力)</span>
-      </div>
-      
-      <div class="usage-box">
+      <div class="section-title">ライセンスキー</div>
+      <label for="licenseKey">ライセンスキーを入力</label>
+      <input type="password" id="licenseKey" placeholder="ftc_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+      <div id="licenseStatus" style="font-size: 12px; margin-top: 4px;"></div>
+      <button class="btn-small" id="validateLicense" style="margin-top: 8px;">検証</button>
+
+      <div class="usage-box" style="margin-top: 12px;">
         <div class="usage-title">📊 今月の使用状況</div>
-        <div class="usage-grid">
+        <div class="usage-grid" style="grid-template-columns: 1fr;">
           <div class="usage-item">
             <span class="usage-label">チェック回数</span>
-            <span class="usage-value" id="checkCount">0 回</span>
-          </div>
-          <div class="usage-item">
-            <span class="usage-label">入力トークン</span>
-            <span class="usage-value" id="inputTokens">0</span>
-          </div>
-          <div class="usage-item">
-            <span class="usage-label">出力トークン</span>
-            <span class="usage-value" id="outputTokens">0</span>
-          </div>
-          <div class="usage-item total">
-            <span class="usage-label">推定コスト</span>
-            <span class="usage-value" id="estimatedCost">$0.0000</span>
+            <span class="usage-value" id="usageCount">- / -</span>
           </div>
         </div>
-        <button class="btn-small" id="resetUsage">リセット</button>
       </div>
     </div>
     

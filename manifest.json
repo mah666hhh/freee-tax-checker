@@ -9,7 +9,7 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://api.anthropic.com/*"
+    "https://freee-tax-checker.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js"

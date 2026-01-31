@@ -1,10 +1,6 @@
 // popup.js - 設定画面のロジック
 
-// モデル別の料金（per 1M tokens）
-const MODEL_PRICING = {
-  'claude-haiku-4-5-20251001': { input: 1.00, output: 5.00, name: 'Haiku 4.5' },
-  'claude-3-5-haiku-20241022': { input: 0.80, output: 4.00, name: 'Haiku 3.5' }
-};
+const API_BASE_URL = 'https://freee-tax-checker.vercel.app';
 
 document.addEventListener('DOMContentLoaded', () => {
   // 現在のタブURLをチェック
@@ -24,16 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initPopup() {
-  const apiKeyInput = document.getElementById('apiKey');
-  const modelSelect = document.getElementById('model');
-  const modelPricing = document.getElementById('modelPricing');
+  const licenseKeyInput = document.getElementById('licenseKey');
+  const licenseStatus = document.getElementById('licenseStatus');
+  const validateBtn = document.getElementById('validateLicense');
+  const usageCountEl = document.getElementById('usageCount');
   const businessTypeInput = document.getElementById('businessType');
   const industrySelect = document.getElementById('industry');
   const additionalInfoInput = document.getElementById('additionalInfo');
   const enabledToggle = document.getElementById('enabled');
   const autoRegisterToggle = document.getElementById('autoRegister');
   const statusDiv = document.getElementById('status');
-  const resetUsageBtn = document.getElementById('resetUsage');
 
   // 家事按分入力要素
   const allocInputs = {
@@ -45,26 +41,18 @@ function initPopup() {
     travel: document.getElementById('alloc_travel')
   };
 
-  // 使用量表示要素
-  const checkCountEl = document.getElementById('checkCount');
-  const inputTokensEl = document.getElementById('inputTokens');
-  const outputTokensEl = document.getElementById('outputTokens');
-  const estimatedCostEl = document.getElementById('estimatedCost');
-
   // 設定を読み込み
   chrome.storage.local.get([
-    'apiKey',
-    'model',
+    'licenseKey',
+    'licenseInfo',
     'businessType',
     'industry',
     'additionalInfo',
     'enabled',
     'autoRegister',
-    'usage',
     'allocations'
   ], (result) => {
-    if (result.apiKey) apiKeyInput.value = result.apiKey;
-    if (result.model) modelSelect.value = result.model;
+    if (result.licenseKey) licenseKeyInput.value = result.licenseKey;
     if (result.businessType) businessTypeInput.value = result.businessType;
     if (result.industry) industrySelect.value = result.industry;
     if (result.additionalInfo) additionalInfoInput.value = result.additionalInfo;
@@ -80,65 +68,64 @@ function initPopup() {
       }
     }
 
-    // 使用量を表示
-    updateUsageDisplay(result.usage, result.model || 'claude-haiku-4-5-20251001');
-
-    // 料金表示を更新
-    updatePricingDisplay(result.model || 'claude-haiku-4-5-20251001');
-  });
-
-  // モデル変更時に料金表示を更新
-  modelSelect.addEventListener('change', () => {
-    updatePricingDisplay(modelSelect.value);
-    // 使用量の推定コストも再計算
-    chrome.storage.local.get(['usage'], (result) => {
-      updateUsageDisplay(result.usage, modelSelect.value);
-    });
-  });
-
-  // 料金表示を更新
-  function updatePricingDisplay(model) {
-    const pricing = MODEL_PRICING[model] || MODEL_PRICING['claude-haiku-4-5-20251001'];
-    modelPricing.textContent = `💰 $${pricing.input.toFixed(2)} / $${pricing.output.toFixed(2)} per MTok (入力/出力)`;
-  }
-
-  // 使用量表示を更新
-  function updateUsageDisplay(usage, model) {
-    const u = usage || { checkCount: 0, inputTokens: 0, outputTokens: 0 };
-    const pricing = MODEL_PRICING[model] || MODEL_PRICING['claude-haiku-4-5-20251001'];
-    
-    checkCountEl.textContent = `${u.checkCount || 0} 回`;
-    inputTokensEl.textContent = formatNumber(u.inputTokens || 0);
-    outputTokensEl.textContent = formatNumber(u.outputTokens || 0);
-    
-    // コスト計算
-    const inputCost = ((u.inputTokens || 0) / 1000000) * pricing.input;
-    const outputCost = ((u.outputTokens || 0) / 1000000) * pricing.output;
-    const totalCost = inputCost + outputCost;
-    
-    estimatedCostEl.textContent = `$${totalCost.toFixed(4)}`;
-  }
-
-  // 数値をフォーマット
-  function formatNumber(num) {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(2) + 'M';
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
+    // ライセンス情報を表示
+    if (result.licenseInfo) {
+      updateLicenseDisplay(result.licenseInfo);
     }
-    return num.toString();
-  }
+  });
 
-  // 使用量リセット
-  resetUsageBtn.addEventListener('click', () => {
-    if (confirm('使用状況をリセットしますか？')) {
-      chrome.storage.local.set({ usage: { checkCount: 0, inputTokens: 0, outputTokens: 0 } }, () => {
-        updateUsageDisplay({ checkCount: 0, inputTokens: 0, outputTokens: 0 }, modelSelect.value);
-        showStatus('使用状況をリセットしました', 'success');
-        setTimeout(() => { statusDiv.className = 'status'; }, 2000);
+  // ライセンス検証ボタン
+  validateBtn.addEventListener('click', async () => {
+    const licenseKey = licenseKeyInput.value.trim();
+    if (!licenseKey) {
+      showLicenseStatus('ライセンスキーを入力してください', 'error');
+      return;
+    }
+
+    validateBtn.disabled = true;
+    validateBtn.textContent = '検証中...';
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey })
       });
+
+      const data = await response.json();
+
+      if (data.valid) {
+        // 成功 - 保存
+        chrome.storage.local.set({
+          licenseKey,
+          licenseInfo: data
+        });
+        updateLicenseDisplay(data);
+        showLicenseStatus('✓ 有効なライセンスです', 'success');
+      } else {
+        showLicenseStatus(data.error || '無効なライセンスキーです', 'error');
+      }
+    } catch (error) {
+      showLicenseStatus('接続エラー: ' + error.message, 'error');
+    } finally {
+      validateBtn.disabled = false;
+      validateBtn.textContent = '検証';
     }
   });
+
+  // ライセンス表示を更新
+  function updateLicenseDisplay(info) {
+    if (info.usage) {
+      const limit = info.usage.limit || '∞';
+      usageCountEl.textContent = `${info.usage.count} / ${limit}`;
+    }
+  }
+
+  // ライセンスステータス表示
+  function showLicenseStatus(message, type) {
+    licenseStatus.textContent = message;
+    licenseStatus.style.color = type === 'success' ? '#2e7d32' : '#c62828';
+  }
 
   // 設定を保存する関数
   function saveSettings(showMessage = true) {
@@ -152,8 +139,7 @@ function initPopup() {
     }
 
     const settings = {
-      apiKey: apiKeyInput.value.trim(),
-      model: modelSelect.value,
+      licenseKey: licenseKeyInput.value.trim(),
       businessType: businessTypeInput.value.trim(),
       industry: industrySelect.value,
       additionalInfo: additionalInfoInput.value.trim(),
@@ -172,7 +158,7 @@ function initPopup() {
 
   // 各入力フィールドの変更時に自動保存
   const autoSaveInputs = [
-    apiKeyInput, modelSelect, businessTypeInput, industrySelect,
+    licenseKeyInput, businessTypeInput, industrySelect,
     additionalInfoInput, enabledToggle, autoRegisterToggle
   ];
   autoSaveInputs.forEach(input => {
