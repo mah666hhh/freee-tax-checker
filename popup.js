@@ -84,6 +84,13 @@ function initPopup() {
     const licenseKey = licenseKeyInput.value.trim();
     if (!licenseKey) {
       showLicenseStatus('ライセンスキーを入力してください', 'error');
+      // キャッシュをクリアして初期状態に
+      chrome.storage.local.remove(['licenseKey', 'licenseInfo']);
+      usageCountEl.textContent = '- / -';
+      const proPromotion = document.getElementById('proPromotion');
+      const usageUpgrade = document.getElementById('usageUpgrade');
+      if (proPromotion) proPromotion.style.display = 'block';
+      if (usageUpgrade) usageUpgrade.style.display = 'none';
       return;
     }
 
@@ -110,8 +117,12 @@ function initPopup() {
       } else {
         showLicenseStatus(data.error || '無効なライセンスキーです', 'error');
         // 無効な場合はキャッシュをクリア
-        chrome.storage.local.remove(['licenseInfo']);
+        chrome.storage.local.remove(['licenseKey', 'licenseInfo']);
         usageCountEl.textContent = '- / -';
+        const proPromotion = document.getElementById('proPromotion');
+        const usageUpgrade = document.getElementById('usageUpgrade');
+        if (proPromotion) proPromotion.style.display = 'block';
+        if (usageUpgrade) usageUpgrade.style.display = 'none';
       }
     } catch (error) {
       showLicenseStatus('接続エラー: ' + error.message, 'error');
