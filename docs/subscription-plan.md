@@ -192,6 +192,7 @@ PayPal Webhook受信（決済完了時）
 - サブスクリプション管理: https://www.paypal.com/billing/plans
 - 支払いリンク作成: https://www.paypal.com/ncp/links/create
 - Developer Dashboard: https://developer.paypal.com/dashboard/applications
+- **Webhook Simulator**: https://developer.paypal.com/dashboard/webhooksSimulator
 
 ### サブスクリプションプラン（本番）
 - 製品名: `freee税務チェッカー Pro（月額）`
