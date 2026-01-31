@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import crypto from 'crypto';
 
 // Redis接続（遅延初期化）
 let redis = null;
