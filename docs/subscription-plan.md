@@ -175,7 +175,7 @@ PayPal Webhook受信（決済完了時）
 ## 技術スタック
 
 - **API**: Vercel Serverless Functions (Node.js)
-- **DB**: Upstash Redis
+- **DB**: Redis Cloud (redis.io)
 - **決済**: PayPal Subscriptions API
 - **メール**: Resend or SendGrid
 - **認証**: ライセンスキー（UUIDベース）
@@ -184,25 +184,21 @@ PayPal Webhook受信（決済完了時）
 
 ```
 ANTHROPIC_API_KEY=sk-ant-xxxxx
-UPSTASH_REDIS_REST_URL=https://xxxxx.upstash.io
-UPSTASH_REDIS_REST_TOKEN=xxxxx
+REDIS_URL=redis://:PASSWORD@redis-18802.c294.ap-northeast-1-2.ec2.cloud.redislabs.com:18802
 PAYPAL_WEBHOOK_ID=xxxxx
 PAYPAL_CLIENT_ID=xxxxx
 PAYPAL_CLIENT_SECRET=xxxxx
 RESEND_API_KEY=xxxxx
 ```
 
-## Upstash セットアップ手順
+## Redis Cloud セットアップ（済）
 
-1. https://upstash.com/ でアカウント作成
-2. 「Create Database」をクリック
-3. 設定:
-   - Name: `freee-tax-checker`
-   - Region: `ap-northeast-1` (東京)
-   - Type: Regional（無料）
-4. 作成後、REST APIタブから以下をコピー:
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
+- Host: `redis-18802.c294.ap-northeast-1-2.ec2.cloud.redislabs.com`
+- Port: `18802`
+- Region: `ap-northeast-1` (東京)
+- 接続URL形式: `redis://:PASSWORD@HOST:PORT`
+
+※ パスワードはRedis Cloudダッシュボードの Database → Configuration → Default user password から取得
 
 ## Vercel デプロイ手順
 
@@ -235,16 +231,17 @@ user:{licenseKey} = {
 
 ### 完了
 - [x] Vercel API基盤ファイル作成
-  - `api/lib/redis.js` - Redis操作ユーティリティ
+  - `api/lib/redis.js` - Redis操作ユーティリティ（ioredis使用）
   - `api/validate.js` - ライセンスキー検証
   - `api/check.js` - 経費チェック（Claude API呼び出し）
   - `api/usage.js` - 使用状況取得
   - `package.json` - 依存パッケージ
   - `vercel.json` - Vercel設定
+- [x] Redis Cloud データベース作成（東京リージョン）
 
 ### 未完了
-- [ ] Upstashアカウント作成・設定
 - [ ] Vercelプロジェクト作成・デプロイ
+- [ ] 環境変数設定（ANTHROPIC_API_KEY, REDIS_URL）
 - [ ] Chrome拡張のUI変更（APIキー→ライセンスキー）
 - [ ] Chrome拡張のAPI呼び出し変更
 - [ ] PayPal Webhook連携
