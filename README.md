@@ -4,10 +4,18 @@ freee経費入力時にリアルタイムで税務リスクを警告するChrome
 
 ## 機能
 
-- 経費登録時に自動でAI判定
+### 経費チェック機能
+- 経費登録時にClaude AIが自動で税務リスクを判定
 - 🟢 白（問題なし）/ 🟡 グレー（要注意）/ 🔴 黒（高リスク）の3段階判定
 - 摘要の改善サジェスト
 - 調査で聞かれそうな質問を事前に把握
+- 家事按分設定を考慮した判定
+
+### 勘定科目フィルター機能
+- 取引一覧ページで特定の勘定科目を非表示にできる
+- 年度レビュー時に「事業主貸」などのノイズを除去
+- 右下の🔍ボタンからフィルターパネルを開く
+- 設定は自動保存
 
 ## インストール方法
 
@@ -30,10 +38,12 @@ freee経費入力時にリアルタイムで税務リスクを警告するChrome
 ```
 freee-tax-checker/
 ├── manifest.json      # 拡張機能の設定
-├── background.js      # Service Worker（API呼び出し）
-├── content.js         # freee画面のDOM操作
+├── background.js      # Service Worker（Claude API呼び出し）
+├── content.js         # 経費チェック機能
+├── deal-filter.js     # 勘定科目フィルター機能
 ├── popup.html/js      # 設定画面
-├── styles.css         # モーダルスタイル
+├── styles.css         # チェック結果モーダルのスタイル
+├── deal-filter.css    # フィルターパネルのスタイル
 └── icons/             # アイコン
 ```
 
