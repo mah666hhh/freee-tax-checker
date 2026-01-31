@@ -38,7 +38,7 @@ export default async function handler(req, res) {
 
     // 使用回数のリセット確認
     const usageCount = await resetUsageIfNeeded(licenseKey, user);
-    const limit = PLAN_LIMITS[user.plan] || PLAN_LIMITS.free;
+    const limit = user.plan in PLAN_LIMITS ? PLAN_LIMITS[user.plan] : PLAN_LIMITS.free;
 
     return res.status(200).json({
       plan: user.plan || 'free',
