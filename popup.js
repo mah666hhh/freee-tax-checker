@@ -109,15 +109,53 @@ function initPopup() {
       showLicenseStatus('接続エラー: ' + error.message, 'error');
     } finally {
       validateBtn.disabled = false;
-      validateBtn.textContent = '検証';
+      validateBtn.textContent = 'ライセンスキー検証';
     }
   });
 
   // ライセンス表示を更新
   function updateLicenseDisplay(info) {
+    const proPromotion = document.getElementById('proPromotion');
+    const usageUpgrade = document.getElementById('usageUpgrade');
+    const usageUpgradeMessage = document.getElementById('usageUpgradeMessage');
+
     if (info.usage) {
-      const limit = info.usage.limit || '∞';
-      usageCountEl.textContent = `${info.usage.count} / ${limit}`;
+      const limit = info.usage.limit;
+      const count = info.usage.count;
+
+      // 無制限プラン（paid）の場合
+      if (limit === null || info.plan === 'paid') {
+        usageCountEl.textContent = `${count} / ∞`;
+        // Proユーザーは課金導線を非表示
+        if (proPromotion) proPromotion.style.display = 'none';
+        if (usageUpgrade) usageUpgrade.style.display = 'none';
+      } else {
+        // Freeプランの場合
+        usageCountEl.textContent = `${count} / ${limit}`;
+        const remaining = limit - count;
+
+        // 残りが少ない or 上限に達した場合
+        if (remaining <= 0) {
+          // 上限に達した
+          if (usageUpgrade) usageUpgrade.style.display = 'block';
+          if (usageUpgradeMessage) {
+            usageUpgradeMessage.textContent = '🚫 今月の無料枠を使い切りました';
+            usageUpgradeMessage.style.color = '#c62828';
+          }
+        } else if (remaining <= 3) {
+          // 残り少ない
+          if (usageUpgrade) usageUpgrade.style.display = 'block';
+          if (usageUpgradeMessage) {
+            usageUpgradeMessage.textContent = `⚠️ 残り${remaining}回です`;
+            usageUpgradeMessage.style.color = '#e65100';
+          }
+        } else {
+          if (usageUpgrade) usageUpgrade.style.display = 'none';
+        }
+
+        // Freeプランは購入導線を表示
+        if (proPromotion) proPromotion.style.display = 'block';
+      }
     }
   }
 
