@@ -40,8 +40,7 @@
         </div>
         <div id="ftc-filter-list"></div>
         <div class="ftc-filter-hint">
-          チェックを外した勘定科目の行を非表示<br>
-          ※ 表示のみ。件数・金額の集計には影響しません
+          チェックを外した勘定科目の行を非表示
         </div>
       </div>
     `;
