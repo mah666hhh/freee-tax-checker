@@ -257,7 +257,7 @@
               console.error('[freee税務チェッカー] エラー:', errorMsg);
               // ライセンスエラーの場合はアラート表示
               if (response?.error?.includes('ライセンス') || response?.error?.includes('上限')) {
-                alert(`チェックエラー: ${response.error}`);
+                alert(response.error);
               }
               proceedWithRegistration(registerBtn);
             }

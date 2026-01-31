@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (!settings.licenseKey) {
         sendResponse({
           success: false,
-          error: 'ライセンスキーが設定されていません。拡張機能の設定画面からライセンスキーを入力してください。'
+          error: '【freee税務チェッカー】ライセンスキーが設定されていません。拡張機能の設定画面からライセンスキーを入力してください。'
         });
         return;
       }
