@@ -207,6 +207,14 @@ PayPal Webhook受信（決済完了時）
 https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ
 ```
 
+### Webhook設定（Live）
+- **Webhook ID: `8TP56721AT189724K`**
+- URL: `https://freee-tax-checker.vercel.app/api/webhook/paypal`
+- Events:
+  - BILLING.SUBSCRIPTION.ACTIVATED（新規登録）
+  - BILLING.SUBSCRIPTION.CANCELLED（解約）
+  - BILLING.SUBSCRIPTION.EXPIRED（期限切れ）
+
 ## 環境変数（Vercel）
 
 ```
