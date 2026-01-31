@@ -127,7 +127,7 @@
           </h3>
           <p style="margin: 0 0 20px; font-size: 14px; color: #666; line-height: 1.6;">
             勘定科目フィルターはProプラン限定機能です。<br>
-            月額550円（税込）で無制限チェック＋フィルター機能が使えます。
+            月額1,078円（税込）で無制限チェック＋フィルター機能が使えます。
           </p>
           <a href="https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ"
              target="_blank"

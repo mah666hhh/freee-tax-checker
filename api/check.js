@@ -8,7 +8,7 @@ const DEFAULT_MODEL = 'claude-3-5-haiku-20241022';
 
 // プランごとの制限（null = 無制限）
 // Free: 5回/月（お試し）
-// Paid: 無制限（550円/月）
+// Paid: 無制限（980円/月、税込1,078円）
 const PLAN_LIMITS = {
   free: 5,
   paid: null  // 無制限
