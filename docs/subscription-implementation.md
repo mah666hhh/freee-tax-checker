@@ -49,10 +49,15 @@
 
 ## 料金プラン
 
-| プラン | 料金 | 制限 |
-|--------|------|------|
-| Free | 無料 | 10回/月 |
-| Pro | 500円/月（税別） | 無制限 |
+| プラン | 料金 | 制限 | ライセンスキー形式 |
+|--------|------|------|-------------------|
+| Free | 無料 | 5回/月 | `ftc_free_xxxxxxxx-xxxx-...` |
+| Pro | 500円/月（税別） | 無制限 | `ftc_xxxxxxxx-xxxx-...` |
+
+### Free枠の自動発行
+- ライセンスキーなしで使用開始すると自動でFreeキーが発行される
+- 同じIPアドレスからは1回のみ発行（悪用防止）
+- IP → ライセンスキーのマッピングをRedisに保存
 
 ### コスト計算
 - Claude Haiku 3.5: 約0.4円/回
@@ -190,11 +195,21 @@ api/
 ├── check.js          # 経費チェックAPI
 ├── validate.js       # ライセンス検証API
 ├── usage.js          # 使用状況API
+├── register-free.js  # Free枠自動発行API（IP制限付き）
 ├── test-setup.js     # テスト用ライセンス発行
 ├── lib/
-│   └── redis.js      # Redis操作
+│   └── redis.js      # Redis操作（IP→キーのマッピング含む）
 └── webhook/
     └── paypal.js     # PayPal Webhook受信
+
+Chrome拡張/
+├── manifest.json     # 拡張機能設定
+├── background.js     # Service Worker（API呼び出し、Free枠自動取得）
+├── content.js        # freee画面のDOM操作
+├── popup.html/js     # 設定画面
+├── options.html/js   # 家事按分設定ページ
+├── styles.css        # モーダルスタイル
+├── deal-filter.js/css # 勘定科目フィルター機能
 
 docs/
 ├── subscription-plan.md           # プラン情報
@@ -205,10 +220,46 @@ docs/
 
 ## 今後の課題
 
-- [ ] フリーティア実装（ライセンスなしで月10回）
+- [x] ~~フリーティア実装（ライセンスなしで月10回）~~ → 5回/月で実装済み
 - [ ] 解約・期限切れ時のメール通知
 - [ ] LP（ランディングページ）作成
 - [ ] 独自ドメイン取得（メール信頼性向上）
+
+---
+
+## 変更履歴
+
+### 2026-01-31（追加実装）
+
+#### Free枠自動発行
+- `POST /api/register-free` 新規API
+- ライセンスキーなしでも自動でFreeキー発行
+- IPアドレスベースで1回のみ発行（悪用防止）
+- Freeキー形式: `ftc_free_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+- Free枠: 5回/月
+
+#### 家事按分オプションページ
+- `options.html` / `options.js` 新規作成
+- 按分項目を自由に追加・編集・削除可能
+- Chrome拡張のオプションページとして登録
+
+#### チェック設定の修正
+- `enabled=false` の場合はAPI呼び出し前にスキップして即登録
+- `autoRegister=false` の場合は🟢判定でも手動確認が必要に
+- チェック中のボタン色を緑（#4CAF50）に変更
+
+#### バグ修正
+- **Paidプランのlimit判定バグ**: `null || PLAN_LIMITS.free` が10に評価される問題
+  - 修正: `user.plan in PLAN_LIMITS ? PLAN_LIMITS[user.plan] : PLAN_LIMITS.free`
+  - 対象: validate.js, check.js, usage.js
+
+#### UI改善
+- カラースキームを紫から緑に統一（アイコンと一致）
+- 勘定科目フィルターのヒントテキスト簡略化
+
+#### デプロイ
+- `feature/subscription-system` ブランチを `main` にマージ
+- mainブランチへのpushで自動的にProductionデプロイ
 
 ---
 
@@ -219,6 +270,7 @@ docs/
 | `/api/validate` | ❌ なし | ライセンスキー検証（Redisのみ） |
 | `/api/check` | ✅ あり | 経費チェック（Claude使う） |
 | `/api/usage` | ❌ なし | 使用状況確認（Redisのみ） |
+| `/api/register-free` | ❌ なし | Free枠自動発行（IP制限付き） |
 | `/api/webhook/paypal` | ❌ なし | PayPal Webhook受信 |
 | `/api/test-setup` | ❌ なし | テスト用ライセンス発行 |
 
