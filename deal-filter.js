@@ -76,6 +76,12 @@
     }
   }
 
+  // 勘定科目の説明
+  const accountDescriptions = {
+    '事業主借': '（個人のお金で経費支払）',
+    '事業主貸': '（プライベート利用）'
+  };
+
   // 勘定科目リストを更新
   function updateAccountList() {
     const accounts = scanAccounts();
@@ -86,11 +92,12 @@
 
     accounts.forEach(account => {
       const isExcluded = excludedAccounts.has(account);
+      const description = accountDescriptions[account] || '';
       const item = document.createElement('label');
       item.className = 'ftc-filter-item';
       item.innerHTML = `
         <input type="checkbox" value="${account}" ${!isExcluded ? 'checked' : ''}>
-        <span>${account}</span>
+        <span>${account}${description}</span>
       `;
       item.querySelector('input').addEventListener('change', (e) => {
         if (e.target.checked) {
