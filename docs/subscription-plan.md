@@ -202,6 +202,11 @@ PayPal Webhook受信（決済完了時）
 - 請求サイクル: 毎月
 - ステータス: オン
 
+### 支払いリンク
+```
+https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ
+```
+
 ## 環境変数（Vercel）
 
 ```
