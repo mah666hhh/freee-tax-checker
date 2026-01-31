@@ -212,6 +212,42 @@ docs/
 
 ---
 
+## APIエンドポイントとClaude呼び出し
+
+| API | Claude | 用途 |
+|-----|--------|------|
+| `/api/validate` | ❌ なし | ライセンスキー検証（Redisのみ） |
+| `/api/check` | ✅ あり | 経費チェック（Claude使う） |
+| `/api/usage` | ❌ なし | 使用状況確認（Redisのみ） |
+| `/api/webhook/paypal` | ❌ なし | PayPal Webhook受信 |
+| `/api/test-setup` | ❌ なし | テスト用ライセンス発行 |
+
+※ Claudeコストは `/api/check` 実行時のみ発生
+
+---
+
+## 管理用URL一覧
+
+### Claude
+- コスト確認: https://platform.claude.com/workspaces/default/cost
+
+### Google
+- アプリパスワード作成: https://myaccount.google.com/apppasswords
+
+### PayPal
+- サブスクリプション管理: https://www.paypal.com/billing/plans
+- Webhook Simulator: https://developer.paypal.com/dashboard/webhooksSimulator
+- Developer Dashboard: https://developer.paypal.com/dashboard/applications
+
+### Redis
+- Upstash Console: https://console.upstash.com/
+
+### Vercel
+- Dashboard: https://vercel.com/dashboard
+- Logs: https://vercel.com/mahs-projects-de92087f/freee-tax-checker
+
+---
+
 ## 参考リンク
 
 - [PayPal Subscriptions API](https://developer.paypal.com/docs/subscriptions/)
