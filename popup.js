@@ -2,6 +2,16 @@
 
 const API_BASE_URL = 'https://freee-tax-checker.vercel.app';
 
+// デフォルトの按分項目
+const DEFAULT_ALLOCATIONS = [
+  { id: 'rent', name: '地代家賃', rate: null },
+  { id: 'utilities', name: '水道光熱費', rate: null },
+  { id: 'communication', name: '通信費', rate: null },
+  { id: 'supplies', name: '消耗品費', rate: null },
+  { id: 'vehicle', name: '車両費', rate: null },
+  { id: 'travel', name: '旅費交通費', rate: null }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
   // 現在のタブURLをチェック
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -30,16 +40,10 @@ function initPopup() {
   const enabledToggle = document.getElementById('enabled');
   const autoRegisterToggle = document.getElementById('autoRegister');
   const statusDiv = document.getElementById('status');
+  const allocationSection = document.getElementById('allocation-section');
+  const openOptionsBtn = document.getElementById('openOptionsBtn');
 
-  // 家事按分入力要素
-  const allocInputs = {
-    rent: document.getElementById('alloc_rent'),
-    utilities: document.getElementById('alloc_utilities'),
-    communication: document.getElementById('alloc_communication'),
-    supplies: document.getElementById('alloc_supplies'),
-    vehicle: document.getElementById('alloc_vehicle'),
-    travel: document.getElementById('alloc_travel')
-  };
+  let currentAllocations = [];
 
   // 設定を読み込み
   chrome.storage.local.get([
@@ -50,6 +54,7 @@ function initPopup() {
     'additionalInfo',
     'enabled',
     'autoRegister',
+    'customAllocations',
     'allocations'
   ], (result) => {
     if (result.licenseKey) licenseKeyInput.value = result.licenseKey;
@@ -59,14 +64,16 @@ function initPopup() {
     if (result.enabled !== undefined) enabledToggle.checked = result.enabled;
     if (result.autoRegister !== undefined) autoRegisterToggle.checked = result.autoRegister;
 
-    // 家事按分設定を読み込み
-    if (result.allocations) {
-      for (const [key, input] of Object.entries(allocInputs)) {
-        if (result.allocations[key] !== undefined && result.allocations[key] !== null) {
-          input.value = result.allocations[key];
-        }
-      }
+    // 家事按分設定を読み込み（新形式優先）
+    if (result.customAllocations && result.customAllocations.length > 0) {
+      currentAllocations = result.customAllocations;
+    } else if (result.allocations && Object.keys(result.allocations).length > 0) {
+      // 旧形式から変換
+      currentAllocations = migrateOldAllocations(result.allocations);
+    } else {
+      currentAllocations = JSON.parse(JSON.stringify(DEFAULT_ALLOCATIONS));
     }
+    renderAllocations();
 
     // ライセンス情報を表示（キーが設定されている場合のみ）
     if (result.licenseKey && result.licenseInfo) {
@@ -77,6 +84,97 @@ function initPopup() {
       const proPromotion = document.getElementById('proPromotion');
       if (proPromotion) proPromotion.style.display = 'block';
     }
+  });
+
+  // 旧形式から新形式へ移行
+  function migrateOldAllocations(oldData) {
+    const keyToName = {
+      rent: '地代家賃',
+      utilities: '水道光熱費',
+      communication: '通信費',
+      supplies: '消耗品費',
+      vehicle: '車両費',
+      travel: '旅費交通費'
+    };
+
+    const migrated = [];
+    for (const [key, rate] of Object.entries(oldData)) {
+      migrated.push({
+        id: key,
+        name: keyToName[key] || key,
+        rate: rate
+      });
+    }
+
+    // 旧データにない項目も追加
+    for (const def of DEFAULT_ALLOCATIONS) {
+      if (!migrated.find(m => m.id === def.id)) {
+        migrated.push({ ...def });
+      }
+    }
+
+    return migrated;
+  }
+
+  // 按分項目をレンダリング
+  function renderAllocations() {
+    if (currentAllocations.length === 0) {
+      allocationSection.innerHTML = '<p style="color: #999; font-size: 12px;">項目がありません</p>';
+      return;
+    }
+
+    allocationSection.innerHTML = currentAllocations.map((item, index) => `
+      <div class="allocation-row">
+        <span class="account-name">${escapeHtml(item.name)}</span>
+        <input type="number" data-index="${index}" min="0" max="100" placeholder="-" value="${item.rate !== null ? item.rate : ''}">
+        <span class="percent">%</span>
+      </div>
+    `).join('');
+
+    // 入力イベントを設定
+    allocationSection.querySelectorAll('input[type="number"]').forEach(input => {
+      input.addEventListener('change', (e) => {
+        const index = parseInt(e.target.dataset.index);
+        let value = parseInt(e.target.value, 10);
+        if (isNaN(value) || e.target.value === '') {
+          currentAllocations[index].rate = null;
+          e.target.value = '';
+        } else {
+          if (value < 0) value = 0;
+          if (value > 100) value = 100;
+          currentAllocations[index].rate = value;
+          e.target.value = value;
+        }
+        saveAllocations();
+      });
+    });
+  }
+
+  // HTMLエスケープ
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // 按分設定を保存
+  function saveAllocations() {
+    // 新形式で保存
+    chrome.storage.local.set({ customAllocations: currentAllocations });
+
+    // 旧形式も互換性のために更新（background.jsで使用）
+    const oldFormat = {};
+    currentAllocations.forEach(a => {
+      if (a.rate !== null) {
+        oldFormat[a.id] = a.rate;
+      }
+    });
+    chrome.storage.local.set({ allocations: oldFormat });
+  }
+
+  // オプションページを開く
+  openOptionsBtn.addEventListener('click', () => {
+    chrome.runtime.openOptionsPage();
   });
 
   // ライセンス検証ボタン
@@ -186,23 +284,13 @@ function initPopup() {
 
   // 設定を保存する関数
   function saveSettings(showMessage = true) {
-    // 家事按分設定を収集
-    const allocations = {};
-    for (const [key, input] of Object.entries(allocInputs)) {
-      const value = input.value.trim();
-      if (value !== '') {
-        allocations[key] = parseInt(value, 10);
-      }
-    }
-
     const settings = {
       licenseKey: licenseKeyInput.value.trim(),
       businessType: businessTypeInput.value.trim(),
       industry: industrySelect.value,
       additionalInfo: additionalInfoInput.value.trim(),
       enabled: enabledToggle.checked,
-      autoRegister: autoRegisterToggle.checked,
-      allocations: allocations
+      autoRegister: autoRegisterToggle.checked
     };
 
     chrome.storage.local.set(settings, () => {
@@ -220,19 +308,6 @@ function initPopup() {
   ];
   autoSaveInputs.forEach(input => {
     input.addEventListener('change', () => saveSettings(false));
-  });
-
-  // 家事按分の入力フィールドも自動保存（0-100に制限）
-  Object.values(allocInputs).forEach(input => {
-    input.addEventListener('change', () => {
-      let value = parseInt(input.value, 10);
-      if (!isNaN(value)) {
-        if (value < 0) value = 0;
-        if (value > 100) value = 100;
-        input.value = value;
-      }
-      saveSettings(false);
-    });
   });
 
   // ステータス表示

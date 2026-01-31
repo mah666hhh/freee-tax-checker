@@ -417,45 +417,19 @@
     <div class="section">
       <div class="section-title">家事按分設定</div>
       <p style="font-size: 12px; color: #666; margin-bottom: 12px;">
-        freeeで設定済みの按分率を入力（事業使用割合）
+        事業使用割合を設定
       </p>
 
-      <div class="allocation-section">
-        <div class="allocation-row">
-          <span class="account-name">地代家賃</span>
-          <input type="number" id="alloc_rent" min="0" max="100" placeholder="-">
-          <span class="percent">%</span>
-        </div>
-        <div class="allocation-row">
-          <span class="account-name">水道光熱費</span>
-          <input type="number" id="alloc_utilities" min="0" max="100" placeholder="-">
-          <span class="percent">%</span>
-        </div>
-        <div class="allocation-row">
-          <span class="account-name">通信費</span>
-          <input type="number" id="alloc_communication" min="0" max="100" placeholder="-">
-          <span class="percent">%</span>
-        </div>
-        <div class="allocation-row">
-          <span class="account-name">消耗品費</span>
-          <input type="number" id="alloc_supplies" min="0" max="100" placeholder="-">
-          <span class="percent">%</span>
-        </div>
-        <div class="allocation-row">
-          <span class="account-name">車両費</span>
-          <input type="number" id="alloc_vehicle" min="0" max="100" placeholder="-">
-          <span class="percent">%</span>
-        </div>
-        <div class="allocation-row">
-          <span class="account-name">旅費交通費</span>
-          <input type="number" id="alloc_travel" min="0" max="100" placeholder="-">
-          <span class="percent">%</span>
-        </div>
+      <div id="allocation-section" class="allocation-section">
+        <!-- 動的に生成 -->
       </div>
 
+      <button id="openOptionsBtn" class="btn-small" style="width: 100%; margin-top: 8px;">
+        項目を編集...
+      </button>
+
       <p class="allocation-hint">
-        ※ 未入力の項目は按分なし（100%事業用）として扱います<br>
-        <a href="https://secure.freee.co.jp/biz_allocations" target="_blank">freeeの家事按分設定を確認 →</a>
+        ※ 未入力の項目は按分なし（100%事業用）として扱います
       </p>
     </div>
 
