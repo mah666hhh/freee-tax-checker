@@ -1,7 +1,86 @@
 import { saveUser, generateLicenseKey, getRedis } from '../lib/redis.js';
+import nodemailer from 'nodemailer';
 
 // PayPal Webhook受信エンドポイント
 // Events: BILLING.SUBSCRIPTION.ACTIVATED, CANCELLED, EXPIRED
+
+// Gmail SMTP設定
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
+
+// ライセンスキー送信メール
+async function sendLicenseKeyEmail(email, licenseKey) {
+  const mailOptions = {
+    from: `freee税務チェッカー <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: '【freee税務チェッカー Pro】ライセンスキーのお届け',
+    html: `
+      <h2>ご購入ありがとうございます！</h2>
+      <p>${email} 様</p>
+      <p>freee税務チェッカー Pro をご購入いただき、誠にありがとうございます。</p>
+
+      <h3>ライセンスキー</h3>
+      <p style="font-size: 18px; background: #f5f5f5; padding: 15px; font-family: monospace;">
+        <strong>${licenseKey}</strong>
+      </p>
+
+      <h3>使い方</h3>
+      <ol>
+        <li>Chrome拡張機能を開く</li>
+        <li>設定画面でライセンスキーを入力</li>
+        <li>「保存」をクリック</li>
+      </ol>
+
+      <p>これで無制限にご利用いただけます。</p>
+
+      <hr>
+      <p style="color: #666; font-size: 12px;">
+        ご不明な点がありましたら、このメールに返信してお問い合わせください。<br>
+        ※このメールは自動送信です。
+      </p>
+    `
+  };
+
+  const result = await transporter.sendMail(mailOptions);
+  console.log('[Gmail] Email sent:', result.messageId);
+  return result;
+}
+
+// 更新完了メール
+async function sendRenewalEmail(email, licenseKey, expiresAt) {
+  const mailOptions = {
+    from: `freee税務チェッカー <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: '【freee税務チェッカー Pro】更新完了のお知らせ',
+    html: `
+      <h2>更新ありがとうございます！</h2>
+      <p>${email} 様</p>
+      <p>freee税務チェッカー Pro の更新が完了しました。</p>
+
+      <h3>ライセンス情報</h3>
+      <ul>
+        <li>ライセンスキー: <code>${licenseKey}</code></li>
+        <li>有効期限: ${new Date(expiresAt).toLocaleDateString('ja-JP')}</li>
+      </ul>
+
+      <p>引き続きご利用ください。</p>
+
+      <hr>
+      <p style="color: #666; font-size: 12px;">
+        ※このメールは自動送信です。
+      </p>
+    `
+  };
+
+  const result = await transporter.sendMail(mailOptions);
+  console.log('[Gmail] Renewal email sent:', result.messageId);
+  return result;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -70,7 +149,8 @@ async function handleSubscriptionActivated(resource) {
       subscriptionId: subscriptionId
     });
 
-    // TODO: 更新完了メールを送信
+    // 更新完了メールを送信
+    await sendRenewalEmail(email, existingKey, newExpiry);
     return;
   }
 
@@ -94,8 +174,8 @@ async function handleSubscriptionActivated(resource) {
 
   console.log('[PayPal Webhook] New user created:', email, licenseKey);
 
-  // TODO: ライセンスキーをメールで送信
-  // await sendLicenseKeyEmail(email, licenseKey);
+  // ライセンスキーをメールで送信
+  await sendLicenseKeyEmail(email, licenseKey);
 }
 
 // サブスクリプション解約
