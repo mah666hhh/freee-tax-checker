@@ -237,18 +237,18 @@
 
   // AIチェックを実行
   function performCheck(registerBtn, dealData) {
-      // ローディング表示
+      // ローディング表示（テキストは変更せず、スタイルのみ変更してfreeeの状態管理を壊さない）
       const originalBg = registerBtn.style.background;
       registerBtn.disabled = true;
-      registerBtn.textContent = 'AIチェック中...（数秒お待ちください）';
       registerBtn.style.background = '#4CAF50';
+      registerBtn.style.opacity = '0.7';
 
       // chrome.runtimeが利用可能かチェック
       if (!chrome?.runtime?.sendMessage) {
         console.error('[freee税務チェッカー] chrome.runtime が利用できません。ページをリロードしてください。');
         registerBtn.disabled = false;
-        registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
         registerBtn.style.background = originalBg;
+        registerBtn.style.opacity = '';
         alert('拡張機能の接続が切れました。ページをリロードしてください。');
         return;
       }
@@ -262,15 +262,15 @@
             if (chrome.runtime.lastError) {
               console.error('[freee税務チェッカー] メッセージ送信エラー:', chrome.runtime.lastError);
               registerBtn.disabled = false;
-              registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
               registerBtn.style.background = originalBg;
+              registerBtn.style.opacity = '';
               proceedWithRegistration(registerBtn);
               return;
             }
 
             registerBtn.disabled = false;
-            registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
             registerBtn.style.background = originalBg;
+            registerBtn.style.opacity = '';
 
             if (response?.success) {
               // autoRegister設定を取得してモーダル表示
@@ -292,8 +292,8 @@
       } catch (err) {
         console.error('[freee税務チェッカー] エラー:', err);
         registerBtn.disabled = false;
-        registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
         registerBtn.style.background = originalBg;
+        registerBtn.style.opacity = '';
         proceedWithRegistration(registerBtn);
       }
   }
