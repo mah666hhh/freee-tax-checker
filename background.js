@@ -9,23 +9,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log('[background] 取引チェックリクエスト受信:', request.dealData);
 
     // 設定を取得してAPI呼び出し
-    chrome.storage.local.get(['licenseKey', 'businessType', 'industry', 'additionalInfo', 'allocations', 'enabled'], async (settings) => {
-      // チェックが無効の場合はスキップ
-      if (settings.enabled === false) {
-        sendResponse({
-          success: true,
-          data: {
-            judgment: '🟢',
-            riskLevel: 1,
-            reason: 'チェック無効',
-            improvement: '',
-            suggestedDescription: '',
-            questions: ''
-          }
-        });
-        return;
-      }
-
+    chrome.storage.local.get(['licenseKey', 'businessType', 'industry', 'additionalInfo', 'allocations'], async (settings) => {
       // ライセンスキーがない場合
       if (!settings.licenseKey) {
         sendResponse({

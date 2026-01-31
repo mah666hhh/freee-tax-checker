@@ -55,7 +55,7 @@
   }
 
   // モーダル表示
-  function showModal(result, onProceed) {
+  function showModal(result, onProceed, autoRegister = true) {
     let modal = document.getElementById('ftc-modal');
     if (!modal) {
       modal = createModal();
@@ -122,7 +122,7 @@
       if (onProceed) onProceed();
     };
 
-    // 🟢の場合は自動で登録を進める
+    // 🟢の場合
     if (judgment === '🟢') {
       modal.querySelector('.ftc-modal-title').textContent = '問題なし！';
       modal.querySelector('.ftc-reason p').textContent = '特に問題は見つかりませんでした。';
@@ -130,12 +130,14 @@
       improvementSection.style.display = 'none';
       suggestedSection.style.display = 'none';
       questionsSection.style.display = 'none';
-      
-      // 2秒後に自動登録
-      setTimeout(() => {
-        hideModal();
-        if (onProceed) onProceed();
-      }, 1500);
+
+      // autoRegisterがONの場合のみ自動登録
+      if (autoRegister) {
+        setTimeout(() => {
+          hideModal();
+          if (onProceed) onProceed();
+        }, 1500);
+      }
     }
 
     modal.classList.add('ftc-modal-show');
@@ -220,15 +222,33 @@
         return;
       }
 
+      // チェックが無効の場合はスキップ
+      chrome.storage.local.get(['enabled'], (settings) => {
+        if (settings.enabled === false) {
+          console.log('[freee税務チェッカー] チェック無効のためスキップ');
+          proceedWithRegistration(registerBtn);
+          return;
+        }
+        // チェック有効の場合はAPI呼び出しへ
+        performCheck(registerBtn, dealData);
+      });
+    }, true);
+  }
+
+  // AIチェックを実行
+  function performCheck(registerBtn, dealData) {
       // ローディング表示
+      const originalBg = registerBtn.style.background;
       registerBtn.disabled = true;
       registerBtn.textContent = 'AIチェック中...（数秒お待ちください）';
+      registerBtn.style.background = '#4CAF50';
 
       // chrome.runtimeが利用可能かチェック
       if (!chrome?.runtime?.sendMessage) {
         console.error('[freee税務チェッカー] chrome.runtime が利用できません。ページをリロードしてください。');
         registerBtn.disabled = false;
         registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
+        registerBtn.style.background = originalBg;
         alert('拡張機能の接続が切れました。ページをリロードしてください。');
         return;
       }
@@ -243,15 +263,21 @@
               console.error('[freee税務チェッカー] メッセージ送信エラー:', chrome.runtime.lastError);
               registerBtn.disabled = false;
               registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
+              registerBtn.style.background = originalBg;
               proceedWithRegistration(registerBtn);
               return;
             }
 
             registerBtn.disabled = false;
             registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
+            registerBtn.style.background = originalBg;
 
             if (response?.success) {
-              showModal(response.data, () => proceedWithRegistration(registerBtn));
+              // autoRegister設定を取得してモーダル表示
+              chrome.storage.local.get(['autoRegister'], (settings) => {
+                const autoRegister = settings.autoRegister !== false; // デフォルトtrue
+                showModal(response.data, () => proceedWithRegistration(registerBtn), autoRegister);
+              });
             } else {
               const errorMsg = response?.error || JSON.stringify(response);
               console.error('[freee税務チェッカー] エラー:', errorMsg);
@@ -267,9 +293,9 @@
         console.error('[freee税務チェッカー] エラー:', err);
         registerBtn.disabled = false;
         registerBtn.textContent = dealData.type === 'expense' ? '支出を登録' : '収入を登録';
+        registerBtn.style.background = originalBg;
         proceedWithRegistration(registerBtn);
       }
-    }, true);
   }
 
   // 元の登録処理を実行
