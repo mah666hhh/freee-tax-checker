@@ -68,7 +68,8 @@ export default async function handler(req, res) {
     console.error('Validate error:', error);
     return res.status(500).json({
       valid: false,
-      error: 'サーバーエラーが発生しました'
+      error: 'サーバーエラーが発生しました',
+      debug: error.message
     });
   }
 }

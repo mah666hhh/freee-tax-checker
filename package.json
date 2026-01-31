@@ -2,6 +2,7 @@
   "name": "freee-tax-checker-api",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "ioredis": "^5.3.2",
     "@anthropic-ai/sdk": "^0.39.0"

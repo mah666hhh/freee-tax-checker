@@ -180,7 +180,21 @@ export default async function handler(req, res) {
       throw new Error('Invalid response format from Claude');
     }
 
-    const result = JSON.parse(jsonMatch[0]);
+    let result;
+    try {
+      result = JSON.parse(jsonMatch[0]);
+    } catch (parseError) {
+      // JSONパースエラー時はデフォルト値を返す
+      console.error('JSON parse error:', parseError, 'Content:', content);
+      result = {
+        judgment: '🟡',
+        riskLevel: 3,
+        reason: 'AIの応答を解析できませんでした。手動で確認してください。',
+        improvement: '',
+        suggestedDescription: '',
+        questions: ''
+      };
+    }
 
     // 使用回数をインクリメント
     const newUsageCount = await incrementUsage(licenseKey);
