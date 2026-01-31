@@ -186,6 +186,22 @@ PayPal Webhook受信（決済完了時）
 - **メール**: Resend or SendGrid
 - **認証**: ライセンスキー（UUIDベース）
 
+## PayPal設定
+
+### 管理画面URL
+- サブスクリプション管理: https://www.paypal.com/billing/plans
+- 支払いリンク作成: https://www.paypal.com/ncp/links/create
+- Developer Dashboard: https://developer.paypal.com/dashboard/applications
+
+### サブスクリプションプラン（本番）
+- 製品名: `freee税務チェッカー Pro（月額）`
+- 製品ID: `ftc-pro-monthly`
+- プラン名: `月額プラン`
+- **プランID: `P-84V60575XD453294JNF662HQ`**
+- 料金: ¥500 JPY（税別）+ 消費税10%
+- 請求サイクル: 毎月
+- ステータス: オン
+
 ## 環境変数（Vercel）
 
 ```
