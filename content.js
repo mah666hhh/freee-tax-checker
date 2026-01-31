@@ -253,7 +253,12 @@
             if (response?.success) {
               showModal(response.data, () => proceedWithRegistration(registerBtn));
             } else {
-              console.error('[freee税務チェッカー] エラー:', response);
+              const errorMsg = response?.error || JSON.stringify(response);
+              console.error('[freee税務チェッカー] エラー:', errorMsg);
+              // ライセンスエラーの場合はアラート表示
+              if (response?.error?.includes('ライセンス') || response?.error?.includes('上限')) {
+                alert(`チェックエラー: ${response.error}`);
+              }
               proceedWithRegistration(registerBtn);
             }
           }
