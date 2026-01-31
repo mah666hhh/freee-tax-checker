@@ -1,0 +1,9 @@
+{
+  "name": "freee-tax-checker-api",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@upstash/redis": "^1.28.0",
+    "@anthropic-ai/sdk": "^0.39.0"
+  }
+}

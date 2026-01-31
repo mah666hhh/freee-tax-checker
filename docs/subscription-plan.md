@@ -175,7 +175,7 @@ PayPal Webhook受信（決済完了時）
 ## 技術スタック
 
 - **API**: Vercel Serverless Functions (Node.js)
-- **DB**: Google Spreadsheet (google-spreadsheet npm)
+- **DB**: Upstash Redis
 - **決済**: PayPal Subscriptions API
 - **メール**: Resend or SendGrid
 - **認証**: ライセンスキー（UUIDベース）
@@ -184,13 +184,44 @@ PayPal Webhook受信（決済完了時）
 
 ```
 ANTHROPIC_API_KEY=sk-ant-xxxxx
-GOOGLE_SHEETS_ID=xxxxx
-GOOGLE_SERVICE_ACCOUNT_EMAIL=xxxxx
-GOOGLE_PRIVATE_KEY=xxxxx
+UPSTASH_REDIS_REST_URL=https://xxxxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=xxxxx
 PAYPAL_WEBHOOK_ID=xxxxx
 PAYPAL_CLIENT_ID=xxxxx
 PAYPAL_CLIENT_SECRET=xxxxx
 RESEND_API_KEY=xxxxx
+```
+
+## Upstash セットアップ手順
+
+1. https://upstash.com/ でアカウント作成
+2. 「Create Database」をクリック
+3. 設定:
+   - Name: `freee-tax-checker`
+   - Region: `ap-northeast-1` (東京)
+   - Type: Regional（無料）
+4. 作成後、REST APIタブから以下をコピー:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+
+## Vercel デプロイ手順
+
+1. Vercel CLIインストール: `npm i -g vercel`
+2. プロジェクトディレクトリで: `vercel`
+3. 環境変数を設定: `vercel env add`
+4. 本番デプロイ: `vercel --prod`
+
+## Redis データ構造
+
+```
+user:{licenseKey} = {
+  email: "user@example.com",
+  plan: "paid",
+  expiresAt: "2027-01-31T00:00:00Z",
+  usageCount: 5,
+  usageResetAt: "2026-02-01T00:00:00Z",
+  createdAt: "2026-01-15T10:00:00Z"
+}
 ```
 
 ## 注意事項
@@ -198,4 +229,23 @@ RESEND_API_KEY=xxxxx
 - ライセンスキーは `ftc_` プレフィックス + UUID v4 形式
 - 使用回数は毎月1日にリセット（usageResetAtで管理）
 - 有効期限切れのキーは使用不可（決済継続で自動延長）
-- スプレッドシートは月次でバックアップ推奨
+- Upstash無料枠: 10,000コマンド/日（十分）
+
+## 現在の実装状況
+
+### 完了
+- [x] Vercel API基盤ファイル作成
+  - `api/lib/redis.js` - Redis操作ユーティリティ
+  - `api/validate.js` - ライセンスキー検証
+  - `api/check.js` - 経費チェック（Claude API呼び出し）
+  - `api/usage.js` - 使用状況取得
+  - `package.json` - 依存パッケージ
+  - `vercel.json` - Vercel設定
+
+### 未完了
+- [ ] Upstashアカウント作成・設定
+- [ ] Vercelプロジェクト作成・デプロイ
+- [ ] Chrome拡張のUI変更（APIキー→ライセンスキー）
+- [ ] Chrome拡張のAPI呼び出し変更
+- [ ] PayPal Webhook連携
+- [ ] メール送信機能
