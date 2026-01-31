@@ -193,12 +193,17 @@ RESEND_API_KEY=xxxxx
 
 ## Redis Cloud セットアップ（済）
 
+- Database: `database-ML2580AE`
 - Host: `redis-18802.c294.ap-northeast-1-2.ec2.cloud.redislabs.com`
 - Port: `18802`
 - Region: `ap-northeast-1` (東京)
-- 接続URL形式: `redis://:PASSWORD@HOST:PORT`
+- Dashboard: https://cloud.redis.io/#/databases/13956515/subscription/3098929/view-bdb/configuration
 
-※ パスワードはRedis Cloudダッシュボードの Database → Configuration → Default user password から取得
+### 接続URL形式
+```
+redis://:PASSWORD@redis-18802.c294.ap-northeast-1-2.ec2.cloud.redislabs.com:18802
+```
+※ PASSWORDはダッシュボードの Default user password から取得
 
 ## Vercel デプロイ手順
 
@@ -235,14 +240,28 @@ user:{licenseKey} = {
   - `api/validate.js` - ライセンスキー検証
   - `api/check.js` - 経費チェック（Claude API呼び出し）
   - `api/usage.js` - 使用状況取得
+  - `api/test-setup.js` - テストユーザー作成（開発用）
   - `package.json` - 依存パッケージ
   - `vercel.json` - Vercel設定
 - [x] Redis Cloud データベース作成（東京リージョン）
+- [x] Vercelプロジェクト作成・デプロイ
+  - URL: https://freee-tax-checker.vercel.app
+- [x] 環境変数設定（ANTHROPIC_API_KEY, REDIS_URL）
+- [x] 全API疎通確認完了（2026-01-31）
+  - `/api/validate` - ライセンスキー検証 ✅
+  - `/api/check` - 経費チェック（Claude API） ✅
+  - `/api/usage` - 使用状況取得 ✅
+
+### テスト用ライセンスキー
+```
+ftc_9439e6f1-59a8-4ae2-9de4-9456d5b3d363
+```
+- プラン: paid
+- 有効期限: 2027-01-31
+- 作成方法: POST /api/test-setup に `{"secret":"ftc-setup-2026"}` を送信
 
 ### 未完了
-- [ ] Vercelプロジェクト作成・デプロイ
-- [ ] 環境変数設定（ANTHROPIC_API_KEY, REDIS_URL）
 - [ ] Chrome拡張のUI変更（APIキー→ライセンスキー）
-- [ ] Chrome拡張のAPI呼び出し変更
+- [ ] Chrome拡張のAPI呼び出し変更（直接→Vercel経由）
 - [ ] PayPal Webhook連携
-- [ ] メール送信機能
+- [ ] メール送信機能（ライセンスキー自動送信）
