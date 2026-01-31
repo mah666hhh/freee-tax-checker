@@ -68,9 +68,14 @@ function initPopup() {
       }
     }
 
-    // ライセンス情報を表示
-    if (result.licenseInfo) {
+    // ライセンス情報を表示（キーが設定されている場合のみ）
+    if (result.licenseKey && result.licenseInfo) {
       updateLicenseDisplay(result.licenseInfo);
+    } else {
+      // キーがない場合は初期状態
+      usageCountEl.textContent = '- / -';
+      const proPromotion = document.getElementById('proPromotion');
+      if (proPromotion) proPromotion.style.display = 'block';
     }
   });
 
@@ -104,6 +109,9 @@ function initPopup() {
         showLicenseStatus('✓ 有効なライセンスです', 'success');
       } else {
         showLicenseStatus(data.error || '無効なライセンスキーです', 'error');
+        // 無効な場合はキャッシュをクリア
+        chrome.storage.local.remove(['licenseInfo']);
+        usageCountEl.textContent = '- / -';
       }
     } catch (error) {
       showLicenseStatus('接続エラー: ' + error.message, 'error');
