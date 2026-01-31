@@ -1,12 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { getUser, incrementUsage, resetUsageIfNeeded } from './lib/redis.js';
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+// モデル設定
+// - claude-3-5-haiku-20241022: $0.80/$4.00 per MTok（コスト重視）
+// - claude-haiku-4-5-20251001: $1.00/$5.00 per MTok（性能重視）
+const DEFAULT_MODEL = 'claude-3-5-haiku-20241022';
 
-// プランごとの制限
+// プランごとの制限（null = 無制限）
+// Free: 10回/月（お試し）
+// Paid: 無制限（500円/月）
 const PLAN_LIMITS = {
   free: 10,
-  paid: null
+  paid: null  // 無制限
 };
 
 // システムプロンプト
