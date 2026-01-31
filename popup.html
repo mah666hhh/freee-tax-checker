@@ -333,11 +333,22 @@
 </head>
 <body>
   <div class="header">
-    <h1>🧾 freee税務チェッカー</h1>
+    <h1>🧾 freee取引入力 税務チェッカー</h1>
     <p>経費入力時に税務リスクを自動チェック</p>
   </div>
-  
-  <div class="content">
+
+  <!-- 対象ページ外のメッセージ -->
+  <div id="not-available" style="display: none; padding: 24px; text-align: center;">
+    <p style="font-size: 14px; color: #666; margin-bottom: 16px;">
+      以下のページでのみ利用できます
+    </p>
+    <a href="https://secure.freee.co.jp/deals" target="_blank"
+       style="color: #2196f3; font-size: 13px;">
+      https://secure.freee.co.jp/deals
+    </a>
+  </div>
+
+  <div class="content" id="main-content">
     <!-- APIキー設定 -->
     <div class="section">
       <div class="section-title">APIキー</div>

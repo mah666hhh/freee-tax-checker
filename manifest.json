@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "freee税務チェッカー",
+  "name": "freee取引入力 税務チェッカー",
   "version": "0.1.0",
   "description": "freee経費入力時にリアルタイムで税務リスクを警告するChrome拡張",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
     "https://api.anthropic.com/*"

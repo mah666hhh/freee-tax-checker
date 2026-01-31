@@ -7,6 +7,23 @@ const MODEL_PRICING = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  // 現在のタブURLをチェック
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const url = tabs[0]?.url || '';
+    const isDealsPage = url.startsWith('https://secure.freee.co.jp/deals');
+
+    if (!isDealsPage) {
+      document.getElementById('not-available').style.display = 'block';
+      document.getElementById('main-content').style.display = 'none';
+      return;
+    }
+
+    // 対象ページならメイン処理を実行
+    initPopup();
+  });
+});
+
+function initPopup() {
   const apiKeyInput = document.getElementById('apiKey');
   const modelSelect = document.getElementById('model');
   const modelPricing = document.getElementById('modelPricing');
@@ -180,4 +197,4 @@ document.addEventListener('DOMContentLoaded', () => {
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
   }
-});
+}

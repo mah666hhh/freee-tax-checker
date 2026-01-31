@@ -1,4 +1,4 @@
-# freee税務チェッカー Chrome拡張
+# freee取引入力 税務チェッカー Chrome拡張
 
 freee経費入力時にリアルタイムで税務リスクを警告するChrome拡張機能です。
 
