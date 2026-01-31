@@ -16,13 +16,13 @@ const transporter = nodemailer.createTransport({
 // ライセンスキー送信メール
 async function sendLicenseKeyEmail(email, licenseKey) {
   const mailOptions = {
-    from: `freee税務チェッカー <${process.env.GMAIL_USER}>`,
+    from: `freee取引入力 税務チェッカー <${process.env.GMAIL_USER}>`,
     to: email,
-    subject: '【freee税務チェッカー Pro】ライセンスキーのお届け',
+    subject: '【freee取引入力 税務チェッカー Pro】ライセンスキーのお届け',
     html: `
       <h2>ご購入ありがとうございます！</h2>
       <p>${email} 様</p>
-      <p>freee税務チェッカー Pro をご購入いただき、誠にありがとうございます。</p>
+      <p>freee取引入力 税務チェッカー Pro をご購入いただき、誠にありがとうございます。</p>
 
       <h3>ライセンスキー</h3>
       <p style="font-size: 18px; background: #f5f5f5; padding: 15px; font-family: monospace;">
@@ -54,13 +54,13 @@ async function sendLicenseKeyEmail(email, licenseKey) {
 // 更新完了メール
 async function sendRenewalEmail(email, licenseKey, expiresAt) {
   const mailOptions = {
-    from: `freee税務チェッカー <${process.env.GMAIL_USER}>`,
+    from: `freee取引入力 税務チェッカー <${process.env.GMAIL_USER}>`,
     to: email,
-    subject: '【freee税務チェッカー Pro】更新完了のお知らせ',
+    subject: '【freee取引入力 税務チェッカー Pro】更新完了のお知らせ',
     html: `
       <h2>更新ありがとうございます！</h2>
       <p>${email} 様</p>
-      <p>freee税務チェッカー Pro の更新が完了しました。</p>
+      <p>freee取引入力 税務チェッカー Pro の更新が完了しました。</p>
 
       <h3>ライセンス情報</h3>
       <ul>

@@ -195,7 +195,7 @@ PayPal Webhook受信（決済完了時）
 - **Webhook Simulator**: https://developer.paypal.com/dashboard/webhooksSimulator
 
 ### サブスクリプションプラン（本番）
-- 製品名: `freee税務チェッカー Pro（月額）`
+- 製品名: `freee取引入力 税務チェッカー Pro（月額）`
 - 製品ID: `ftc-pro-monthly`
 - プラン名: `月額プラン`
 - **プランID: `P-84V60575XD453294JNF662HQ`**

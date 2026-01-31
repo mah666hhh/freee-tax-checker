@@ -73,7 +73,7 @@
 - Webhook Simulator: https://developer.paypal.com/dashboard/webhooksSimulator
 
 ### プラン情報
-- 製品名: `freee税務チェッカー Pro（月額）`
+- 製品名: `freee取引入力 税務チェッカー Pro（月額）`
 - 製品ID: `ftc-pro-monthly`
 - プランID: `P-84V60575XD453294JNF662HQ`
 - 料金: ¥500（税別）+ 消費税10%
