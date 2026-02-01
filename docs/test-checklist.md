@@ -1,6 +1,6 @@
 # テストチェックリスト
 
-## テスト実施日: 2026-01-31
+## テスト実施日: 2026-01-31, 2026-02-01
 
 ---
 
@@ -72,6 +72,17 @@
 
 ---
 
+## 7. PayPal本番Webhook（IPN）
+
+| # | テスト内容 | 期待結果 | 結果 | 備考 |
+|---|-----------|---------|------|------|
+| 7-1 | 1円テストプランで決済 | 決済完了 | ✅ | plan_id: P-89B34021UH427020WNF7JM4Q |
+| 7-2 | IPN受信 | Vercelログに `recurring_payment` 表示 | ✅ | |
+| 7-3 | ライセンスキー生成 | `ftc_` 形式のキーが生成 | ✅ | ftc_57d9b0b3-03bd-4e7c-b475-1ce73dc5c29d |
+| 7-4 | メール送信 | 購入者にライセンスキーメール届く | ✅ | toukarekeywordsearch@gmail.com |
+
+---
+
 ## 結果サマリー
 
 | カテゴリ | 合格 | 不合格 | 未実施 |
@@ -82,7 +93,8 @@
 | ライセンス・プラン | 4 | | |
 | チェック機能 | 5 | | |
 | オプションページ | 5 | | |
-| **合計** | 26 | | |
+| PayPal本番Webhook | 4 | | |
+| **合計** | 30 | | |
 
 ---
 
@@ -91,10 +103,13 @@
 | # | 問題内容 | 重要度 | ステータス |
 |---|---------|--------|-----------|
 | 1 | チェック実行後、収入/支出タブを切り替えてもボタンテキストが変わらない | 中 | ✅ 修正済み |
+| 2 | PayPal WebhookがIPNで送信されていた（Developer DashboardのWebhookではなく） | 高 | ✅ 修正済み（IPN対応追加） |
 
 ---
 
 ## メモ
 
 - テスト用Proキー: `ftc_9439e6f1-59a8-4ae2-9de4-9456d5b3d363`
-- PayPal決済リンク: `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ`
+- PayPal本番決済リンク（980円）: `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ`
+- PayPalテスト用リンク（1円）: `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-89B34021UH427020WNF7JM4Q`
+- IPN設定URL: PayPalビジネスアカウント > 即時支払い通知(IPN) > 通知URL設定
