@@ -16,9 +16,9 @@
 │                                                                 │
 │  2. PayPalで決済完了（980円+税10%=1,078円/月）                    │
 │                                                                 │
-│  3. PayPal → Webhook送信                                        │
+│  3. PayPal → IPN/Webhook送信                                    │
 │     └→ POST /api/webhook/paypal                                 │
-│     └→ Event: BILLING.SUBSCRIPTION.ACTIVATED                    │
+│     └→ IPN: recurring_payment / Webhook: SUBSCRIPTION.ACTIVATED │
 │                                                                 │
 │  4. Webhook受信 → ライセンスキー発行                             │
 │     └→ ftc_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx                 │
@@ -83,13 +83,26 @@
 https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ
 ```
 
-### Webhook設定
+### Webhook設定（Developer Dashboard）
 - Webhook ID: `8TP56721AT189724K`
 - URL: `https://freee-tax-checker.vercel.app/api/webhook/paypal`
 - Events:
   - BILLING.SUBSCRIPTION.ACTIVATED（新規登録）
   - BILLING.SUBSCRIPTION.CANCELLED（解約）
   - BILLING.SUBSCRIPTION.EXPIRED（期限切れ）
+
+### IPN設定（ビジネスアカウント）
+- URL: `https://freee-tax-checker.vercel.app/api/webhook/paypal`
+- 設定場所: PayPal.com → アカウント設定 → 即時支払い通知(IPN)
+
+### ⚠️ 重要: Webhook vs IPN の違い
+
+| 作成方法 | 通知システム |
+|----------|-------------|
+| PayPal REST API（コードで作成） | Developer Dashboard の **Webhooks** |
+| PayPalビジネス画面（paypal.com/billing/plans） | アカウント設定の **IPN** |
+
+**注意:** ビジネス画面でサブスクリプションプランを作成した場合、Developer DashboardのWebhooksは使われず、**IPNのみ**が送信される。両方のエンドポイントを同じURLに設定し、コード側で両形式に対応している。
 
 ---
 
