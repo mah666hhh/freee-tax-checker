@@ -60,6 +60,7 @@
 - 対象ドメイン: secure.freee.co.jp/deals*
 - zipファイル: freee-tax-checker-extension.zip
 - Chrome Web Store ID: pmjfjifpadhnkddieedbnbpeiilgecpp
+- 公開URL: https://chromewebstore.google.com/detail/freee%E5%8F%96%E5%BC%95%E5%85%A5%E5%8A%9B-%E7%A8%8E%E5%8B%99%E3%83%81%E3%82%A7%E3%83%83%E3%82%AB%E3%83%BC/pmjfjifpadhnkddieedbnbpeiilgecpp
 - デベロッパーコンソール: https://chrome.google.com/webstore/devconsole/e1d4c653-66f5-4014-89a1-6e491048f2a8/pmjfjifpadhnkddieedbnbpeiilgecpp/edit
 
 ## 連絡先表記
