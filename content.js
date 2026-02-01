@@ -122,7 +122,7 @@
       if (onProceed) onProceed();
     };
 
-    // 🟢の場合
+    // 判定に応じたタイトルとセクション表示
     if (judgment === '🟢') {
       modal.querySelector('.ftc-modal-title').textContent = '問題なし！';
       modal.querySelector('.ftc-reason p').textContent = '特に問題は見つかりませんでした。';
@@ -138,6 +138,10 @@
           if (onProceed) onProceed();
         }, 1500);
       }
+    } else if (judgment === '🟡') {
+      modal.querySelector('.ftc-modal-title').textContent = '税務チェック結果';
+    } else {
+      modal.querySelector('.ftc-modal-title').textContent = '要確認！';
     }
 
     modal.classList.add('ftc-modal-show');
