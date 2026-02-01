@@ -17,6 +17,11 @@
 
 ## サービス設定
 
+### Upstash (Redis)
+- Redisはクラウド（Upstash）で動作
+- Redis Insightはローカルの閲覧ツール（閉じてもOK）
+- アプリ（Vercel）は直接Upstashに接続
+
 ### Vercel
 - プロジェクトURL: https://freee-tax-checker.vercel.app
 - 環境変数:
