@@ -65,4 +65,4 @@ MIT License
 
 ## 作者
 
-スリ飯屋MaLanka - https://www.malanka.org/
+freee取引入力 税務チェッカー - https://x.com/freeetaxchecker
