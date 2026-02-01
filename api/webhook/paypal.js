@@ -88,38 +88,101 @@ export default async function handler(req, res) {
   }
 
   try {
-    const event = req.body;
-    const eventType = event.event_type;
-    const resource = event.resource;
+    const contentType = req.headers['content-type'] || '';
 
-    console.log('[PayPal Webhook] Event received:', eventType);
-    console.log('[PayPal Webhook] Resource:', JSON.stringify(resource, null, 2));
-
-    switch (eventType) {
-      case 'BILLING.SUBSCRIPTION.ACTIVATED':
-        await handleSubscriptionActivated(resource);
-        break;
-
-      case 'BILLING.SUBSCRIPTION.CANCELLED':
-        await handleSubscriptionCancelled(resource);
-        break;
-
-      case 'BILLING.SUBSCRIPTION.EXPIRED':
-        await handleSubscriptionExpired(resource);
-        break;
-
-      default:
-        console.log('[PayPal Webhook] Unhandled event type:', eventType);
+    // IPN (form-urlencoded) か Webhook (JSON) かを判定
+    if (contentType.includes('application/x-www-form-urlencoded') || req.body.txn_type) {
+      // PayPal IPN形式
+      return await handleIPN(req, res);
+    } else {
+      // PayPal Webhook (REST API) 形式
+      return await handleWebhook(req, res);
     }
 
-    // PayPalには常に200を返す
-    return res.status(200).json({ received: true });
-
   } catch (error) {
-    console.error('[PayPal Webhook] Error:', error);
-    // エラーでも200を返す（PayPalのリトライを防ぐ）
-    return res.status(200).json({ received: true, error: error.message });
+    console.error('[PayPal] Error:', error);
+    // エラーでも200を返す（リトライを防ぐ）
+    return res.status(200).send('OK');
   }
+}
+
+// PayPal IPN ハンドラー
+async function handleIPN(req, res) {
+  const ipn = req.body;
+  const txnType = ipn.txn_type;
+  const payerEmail = ipn.payer_email;
+  const subscriptionId = ipn.subscr_id || ipn.recurring_payment_id;
+
+  console.log('[PayPal IPN] txn_type:', txnType);
+  console.log('[PayPal IPN] payer_email:', payerEmail);
+  console.log('[PayPal IPN] subscription_id:', subscriptionId);
+  console.log('[PayPal IPN] Full body:', JSON.stringify(ipn, null, 2));
+
+  // サブスクリプション関連のイベント
+  switch (txnType) {
+    case 'subscr_signup':      // 従来のサブスクリプション登録
+    case 'recurring_payment_profile_created':  // 定期支払いプロファイル作成
+    case 'recurring_payment':   // 定期支払い完了
+      if (payerEmail) {
+        await handleSubscriptionActivated({
+          id: subscriptionId,
+          subscriber: { email_address: payerEmail },
+          start_time: new Date().toISOString()
+        });
+      }
+      break;
+
+    case 'subscr_cancel':      // サブスクリプション解約
+    case 'recurring_payment_profile_cancel':
+      if (subscriptionId) {
+        await handleSubscriptionCancelled({ id: subscriptionId });
+      }
+      break;
+
+    case 'subscr_eot':         // サブスクリプション期限切れ
+    case 'recurring_payment_expired':
+    case 'recurring_payment_suspended':
+      if (subscriptionId) {
+        await handleSubscriptionExpired({ id: subscriptionId });
+      }
+      break;
+
+    default:
+      console.log('[PayPal IPN] Unhandled txn_type:', txnType);
+  }
+
+  // IPNには必ず "OK" テキストを返す
+  return res.status(200).send('OK');
+}
+
+// PayPal Webhook (REST API) ハンドラー
+async function handleWebhook(req, res) {
+  const event = req.body;
+  const eventType = event.event_type;
+  const resource = event.resource;
+
+  console.log('[PayPal Webhook] Event received:', eventType);
+  console.log('[PayPal Webhook] Resource:', JSON.stringify(resource, null, 2));
+
+  switch (eventType) {
+    case 'BILLING.SUBSCRIPTION.ACTIVATED':
+      await handleSubscriptionActivated(resource);
+      break;
+
+    case 'BILLING.SUBSCRIPTION.CANCELLED':
+      await handleSubscriptionCancelled(resource);
+      break;
+
+    case 'BILLING.SUBSCRIPTION.EXPIRED':
+      await handleSubscriptionExpired(resource);
+      break;
+
+    default:
+      console.log('[PayPal Webhook] Unhandled event type:', eventType);
+  }
+
+  // PayPalには常に200を返す
+  return res.status(200).json({ received: true });
 }
 
 // 新規サブスクリプション登録
