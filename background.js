@@ -85,11 +85,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log('[background] Vercel API応答:', data);
 
         if (data.success) {
-          // 使用量をローカルにも保存（表示用）
-          chrome.storage.local.set({
-            licenseInfo: {
-              usage: data.usage
-            }
+          // 使用量をローカルにも保存（表示用）- 既存のplanを保持
+          chrome.storage.local.get(['licenseInfo'], (existing) => {
+            chrome.storage.local.set({
+              licenseInfo: {
+                ...existing.licenseInfo,
+                usage: data.usage
+              }
+            });
           });
 
           sendResponse({ success: true, data: data.result });
