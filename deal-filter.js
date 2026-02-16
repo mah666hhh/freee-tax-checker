@@ -127,7 +127,7 @@
           </h3>
           <p style="margin: 0 0 20px; font-size: 14px; color: #666; line-height: 1.6;">
             勘定科目フィルターはチェックパック購入者限定機能です。<br>
-            100回チェックパック（980円）を購入するとご利用いただけます。
+            50回チェックパック（980円）を購入するとご利用いただけます。
           </p>
           <button id="ftc-upgrade-purchase" style="
                display: block;
@@ -142,7 +142,7 @@
                cursor: pointer;
                margin-bottom: 12px;
              ">
-            購入する（980円 / 100回）
+            購入する（980円 / 50回）
           </button>
           <button id="ftc-upgrade-close" style="
             background: none;

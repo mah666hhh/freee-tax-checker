@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
     const price = process.env.FTC_PRODUCT_PRICE || '980';
-    const credits = process.env.FTC_PAID_CREDITS || '100';
+    const credits = process.env.FTC_PAID_CREDITS || '50';
 
     const accessToken = await getPayPalAccessToken();
     const base = getPayPalBaseUrl();

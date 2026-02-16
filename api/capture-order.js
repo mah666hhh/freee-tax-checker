@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     }
 
     // クレジット加算
-    const credits = parseInt(process.env.FTC_PAID_CREDITS) || 100;
+    const credits = parseInt(process.env.FTC_PAID_CREDITS) || 50;
     await addPaidCredits(userToken, credits);
 
     return res.redirect(302, `${APP_BASE_URL}/payment-success.html`);
