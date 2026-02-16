@@ -1,18 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getUser, incrementUsage, resetUsageIfNeeded } from './lib/redis.js';
 
 // モデル設定
-// - claude-3-5-haiku-20241022: $0.80/$4.00 per MTok（コスト重視）
-// - claude-haiku-4-5-20251001: $1.00/$5.00 per MTok（性能重視）
 const DEFAULT_MODEL = 'claude-3-5-haiku-20241022';
-
-// プランごとの制限（null = 無制限）
-// Free: 5回/月（お試し）
-// Paid: 無制限（980円/月、税込1,078円）
-const PLAN_LIMITS = {
-  free: 5,
-  paid: null  // 無制限
-};
 
 // システムプロンプト
 const SYSTEM_PROMPT = `あなたは元国税調査官として20年の経験を持つ、経費チェックの専門家です。
@@ -100,48 +89,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { licenseKey, expenseData, businessInfo, allocationRates } = req.body;
-
-    // ライセンスキー検証
-    if (!licenseKey) {
-      return res.status(400).json({
-        success: false,
-        error: 'ライセンスキーが必要です'
-      });
-    }
-
-    const user = await getUser(licenseKey);
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: '無効なライセンスキーです'
-      });
-    }
-
-    // 有効期限チェック
-    const expiresAt = user.expiresAt ? new Date(user.expiresAt) : null;
-    if (expiresAt && new Date() > expiresAt) {
-      return res.status(403).json({
-        success: false,
-        error: 'ライセンスの有効期限が切れています'
-      });
-    }
-
-    // 使用回数チェック
-    const usageCount = await resetUsageIfNeeded(licenseKey, user);
-    const limit = user.plan in PLAN_LIMITS ? PLAN_LIMITS[user.plan] : PLAN_LIMITS.free;
-
-    if (limit && usageCount >= limit) {
-      return res.status(429).json({
-        success: false,
-        error: `今月の利用上限（${limit}回）に達しました`,
-        usage: {
-          count: usageCount,
-          limit: limit,
-          remaining: 0
-        }
-      });
-    }
+    const { expenseData, businessInfo, allocationRates } = req.body;
 
     // Claude API呼び出し
     const allocationsText = formatAllocations(allocationRates);
@@ -189,7 +137,6 @@ export default async function handler(req, res) {
     try {
       result = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
-      // JSONパースエラー時はデフォルト値を返す
       console.error('JSON parse error:', parseError, 'Content:', content);
       result = {
         judgment: '🟡',
@@ -201,17 +148,9 @@ export default async function handler(req, res) {
       };
     }
 
-    // 使用回数をインクリメント
-    const newUsageCount = await incrementUsage(licenseKey);
-
     return res.status(200).json({
       success: true,
-      result: result,
-      usage: {
-        count: newUsageCount,
-        limit: limit,
-        remaining: limit ? limit - newUsageCount : null
-      }
+      result: result
     });
 
   } catch (error) {
