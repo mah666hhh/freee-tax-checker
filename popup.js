@@ -119,21 +119,29 @@ function initPopup() {
   purchaseBtn.addEventListener('click', () => {
     purchaseBtn.disabled = true;
     purchaseBtn.textContent = '処理中...';
+    creditsWarningEl.style.display = 'none';
 
     chrome.runtime.sendMessage({ type: 'CREATE_ORDER' }, (response) => {
-      purchaseBtn.disabled = false;
-      purchaseBtn.textContent = '購入する';
-
       if (chrome.runtime.lastError) {
-        showStatus('接続エラーが発生しました', 'error');
+        purchaseBtn.disabled = false;
+        purchaseBtn.textContent = '購入する';
+        creditsWarningEl.textContent = '接続エラーが発生しました';
+        creditsWarningEl.style.display = 'block';
+        creditsWarningEl.style.background = '#ffebee';
+        creditsWarningEl.style.color = '#c62828';
         return;
       }
 
-      if (response?.success && response.approval_url) {
-        // PayPal決済ページを新しいタブで開く
-        chrome.tabs.create({ url: response.approval_url });
+      if (response?.success) {
+        // background側でPayPalページが開かれる
+        purchaseBtn.textContent = 'PayPalページを開きました';
       } else {
-        showStatus(response?.error || '注文作成に失敗しました', 'error');
+        purchaseBtn.disabled = false;
+        purchaseBtn.textContent = '購入する';
+        creditsWarningEl.textContent = response?.error || '注文作成に失敗しました';
+        creditsWarningEl.style.display = 'block';
+        creditsWarningEl.style.background = '#ffebee';
+        creditsWarningEl.style.color = '#c62828';
       }
     });
   });

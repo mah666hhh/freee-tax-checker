@@ -189,7 +189,9 @@ async function handleCreateOrder(sendResponse) {
     const data = await response.json();
 
     if (data.approval_url) {
-      sendResponse({ success: true, approval_url: data.approval_url });
+      // background側でタブを開く（ポップアップが閉じても確実に動作する）
+      chrome.tabs.create({ url: data.approval_url });
+      sendResponse({ success: true });
     } else {
       sendResponse({ success: false, error: data.error || '注文作成に失敗しました' });
     }
