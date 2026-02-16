@@ -70,9 +70,9 @@
       return;
     }
 
-    // 開く場合はProプランかチェック
-    chrome.storage.local.get(['licenseInfo'], (result) => {
-      if (result.licenseInfo?.plan !== 'paid') {
+    // 開く場合は購入済みかチェック
+    chrome.storage.local.get(['paidRemaining', 'hasPurchased'], (result) => {
+      if (!result.hasPurchased && (!result.paidRemaining || result.paidRemaining <= 0)) {
         showUpgradePrompt();
         return;
       }
@@ -123,26 +123,27 @@
         ">
           <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
           <h3 style="margin: 0 0 12px; font-size: 18px; color: #333;">
-            Pro機能です
+            有料機能です
           </h3>
           <p style="margin: 0 0 20px; font-size: 14px; color: #666; line-height: 1.6;">
-            勘定科目フィルターはProプラン限定機能です。<br>
-            月額1,078円（税込）で無制限チェック＋フィルター機能が使えます。
+            勘定科目フィルターはチェックパック購入者限定機能です。<br>
+            100回チェックパック（980円）を購入するとご利用いただけます。
           </p>
-          <a href="https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ"
-             target="_blank"
-             style="
+          <button id="ftc-upgrade-purchase" style="
                display: block;
+               width: 100%;
                background: #4CAF50;
                color: white;
                padding: 12px 24px;
                border-radius: 6px;
-               text-decoration: none;
+               border: none;
                font-weight: bold;
+               font-size: 16px;
+               cursor: pointer;
                margin-bottom: 12px;
              ">
-            Proにアップグレード →
-          </a>
+            購入する（980円 / 100回）
+          </button>
           <button id="ftc-upgrade-close" style="
             background: none;
             border: none;
@@ -154,6 +155,18 @@
       </div>
     `;
     document.body.appendChild(modal);
+
+    // 購入ボタン
+    document.getElementById('ftc-upgrade-purchase').addEventListener('click', () => {
+      chrome.runtime.sendMessage({ type: 'CREATE_ORDER' }, (response) => {
+        if (response?.success && response.approval_url) {
+          window.open(response.approval_url, '_blank');
+          modal.remove();
+        } else {
+          alert(response?.error || '注文作成に失敗しました');
+        }
+      });
+    });
 
     // 閉じるボタン
     document.getElementById('ftc-upgrade-close').addEventListener('click', () => {

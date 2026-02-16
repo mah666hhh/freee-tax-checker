@@ -286,7 +286,7 @@
               const errorMsg = response?.error || JSON.stringify(response);
               console.error('[freee税務チェッカー] エラー:', errorMsg);
               // ライセンスエラーの場合はアラート表示
-              if (response?.error?.includes('ライセンス') || response?.error?.includes('上限')) {
+              if (response?.error?.includes('利用上限') || response?.error?.includes('上限')) {
                 alert(response.error);
               }
               proceedWithRegistration(registerBtn);

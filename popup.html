@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       width: 320px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -19,29 +19,29 @@
       background: #f5f5f5;
       border: 3px solid #4CAF50;
     }
-    
+
     .header {
       background: linear-gradient(135deg, #4CAF50, #388E3C);
       color: #fff;
       padding: 12px;
       text-align: center;
     }
-    
+
     .header h1 {
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 4px;
     }
-    
+
     .header p {
       font-size: 12px;
       opacity: 0.9;
     }
-    
+
     .content {
       padding: 16px;
     }
-    
+
     .section {
       background: #fff;
       border-radius: 8px;
@@ -49,7 +49,7 @@
       margin-bottom: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    
+
     .section-title {
       font-size: 13px;
       font-weight: 600;
@@ -59,7 +59,7 @@
       align-items: center;
       gap: 6px;
     }
-    
+
     .section-title::before {
       content: '';
       width: 3px;
@@ -67,14 +67,14 @@
       background: #4CAF50;
       border-radius: 2px;
     }
-    
+
     label {
       display: block;
       font-size: 12px;
       color: #666;
       margin-bottom: 4px;
     }
-    
+
     input[type="text"],
     input[type="password"],
     select,
@@ -87,19 +87,19 @@
       margin-bottom: 12px;
       transition: border-color 0.2s;
     }
-    
+
     input:focus,
     select:focus,
     textarea:focus {
       outline: none;
       border-color: #4CAF50;
     }
-    
+
     textarea {
       resize: vertical;
       min-height: 60px;
     }
-    
+
     .btn {
       width: 100%;
       padding: 12px;
@@ -112,21 +112,26 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-    
+
     .btn:hover {
       background: #388E3C;
     }
-    
+
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
     .btn-secondary {
       background: #fff;
       color: #666;
       border: 1px solid #ddd;
     }
-    
+
     .btn-secondary:hover {
       background: #f5f5f5;
     }
-    
+
     .status {
       text-align: center;
       padding: 8px;
@@ -135,55 +140,55 @@
       margin-top: 8px;
       display: none;
     }
-    
+
     .status.success {
       display: block;
       background: #e8f5e9;
       color: #2e7d32;
     }
-    
+
     .status.error {
       display: block;
       background: #ffebee;
       color: #c62828;
     }
-    
+
     .footer {
       text-align: center;
       padding: 12px;
       font-size: 11px;
       color: #999;
     }
-    
+
     .footer a {
       color: #4CAF50;
       text-decoration: none;
     }
-    
+
     .toggle-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
     }
-    
+
     .toggle-label {
       font-size: 13px;
       color: #333;
     }
-    
+
     .toggle {
       position: relative;
       width: 44px;
       height: 24px;
     }
-    
+
     .toggle input {
       opacity: 0;
       width: 0;
       height: 0;
     }
-    
+
     .toggle-slider {
       position: absolute;
       cursor: pointer;
@@ -195,7 +200,7 @@
       border-radius: 24px;
       transition: 0.3s;
     }
-    
+
     .toggle-slider::before {
       position: absolute;
       content: '';
@@ -207,69 +212,90 @@
       border-radius: 50%;
       transition: 0.3s;
     }
-    
+
     .toggle input:checked + .toggle-slider {
       background: #4caf50;
     }
-    
+
     .toggle input:checked + .toggle-slider::before {
       transform: translateX(20px);
     }
-    
-    .model-pricing {
-      font-size: 12px;
+
+    /* 利用状況セクション */
+    .credits-display {
+      text-align: center;
+      padding: 16px 0 8px;
+    }
+
+    .credits-number {
+      font-size: 36px;
+      font-weight: 700;
+      color: #4CAF50;
+      line-height: 1;
+    }
+
+    .credits-number.warning {
+      color: #e65100;
+    }
+
+    .credits-number.depleted {
+      color: #c62828;
+    }
+
+    .credits-unit {
+      font-size: 14px;
       color: #666;
-      margin-top: -8px;
-      margin-bottom: 12px;
-    }
-    
-    .usage-box {
-      background: #f8f9fa;
-      border-radius: 6px;
-      padding: 12px;
-      margin-top: 8px;
-    }
-    
-    .usage-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 8px;
-    }
-    
-    .usage-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    
-    .usage-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-    
-    .usage-label {
-      color: #666;
-    }
-    
-    .usage-value {
-      font-weight: 500;
-      color: #333;
-    }
-    
-    .usage-item.total {
-      grid-column: 1 / -1;
-      border-top: 1px solid #ddd;
-      padding-top: 8px;
       margin-top: 4px;
     }
-    
-    .usage-item.total .usage-value {
-      color: #4CAF50;
+
+    .credits-breakdown {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .credits-breakdown span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .credits-warning {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #fff3e0;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #e65100;
+      text-align: center;
+      display: none;
+    }
+
+    .purchase-section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .purchase-info {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .btn-purchase {
+      background: linear-gradient(135deg, #4CAF50, #388E3C);
       font-weight: 600;
     }
-    
+
+    .btn-purchase:hover {
+      background: linear-gradient(135deg, #388E3C, #2E7D32);
+    }
+
     .btn-small {
       margin-top: 8px;
       padding: 6px 12px;
@@ -280,7 +306,7 @@
       font-size: 11px;
       cursor: pointer;
     }
-    
+
     .btn-small:hover {
       background: #f5f5f5;
     }
@@ -350,53 +376,31 @@
   </div>
 
   <div class="content" id="main-content">
-    <!-- ライセンスキー設定 -->
+    <!-- 利用状況 -->
     <div class="section">
-      <div class="section-title">ライセンスキー</div>
-      <label for="licenseKey">ライセンスキーを入力</label>
-      <input type="password" id="licenseKey" placeholder="ftc_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-      <div id="licenseStatus" style="font-size: 12px; margin-top: 4px;"></div>
-      <button class="btn-small" id="validateLicense" style="margin-top: 8px;">ライセンスキー検証</button>
-      <p style="font-size: 10px; color: #999; margin-top: 4px;">※ 検証は利用回数に含まれません</p>
-
-      <div class="usage-box" style="margin-top: 12px;">
-        <div class="usage-title">📊 今月の使用状況</div>
-        <div class="usage-grid" style="grid-template-columns: 1fr;">
-          <div class="usage-item">
-            <span class="usage-label">チェック回数</span>
-            <span class="usage-value" id="usageCount">- / -</span>
-          </div>
-        </div>
-        <!-- 使用状況での課金導線 -->
-        <div id="usageUpgrade" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
-          <p id="usageUpgradeMessage" style="font-size: 12px; color: #e65100; margin-bottom: 8px;"></p>
-          <a href="https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ"
-             target="_blank"
-             style="display: block; text-align: center; background: #4CAF50; color: #fff; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;">
-            Proにアップグレード →
-          </a>
-        </div>
+      <div class="section-title">利用状況</div>
+      <div class="credits-display">
+        <div class="credits-number" id="totalCredits">-</div>
+        <div class="credits-unit">残りチェック回数</div>
       </div>
-
-      <!-- ライセンスキー未設定時の課金導線 -->
-      <div id="proPromotion" style="margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 8px;">
-        <p style="font-size: 13px; font-weight: 600; color: #388E3C; margin-bottom: 4px;">🎁 Proプランにアップグレード</p>
-        <p style="font-size: 11px; color: #666; margin-bottom: 8px;">月額980円（税別）で無制限チェック＋フィルター機能！</p>
-        <a href="https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-84V60575XD453294JNF662HQ"
-           target="_blank"
-           style="display: block; text-align: center; background: #4CAF50; color: #fff; padding: 10px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500;">
-          今すぐ購入する →
-        </a>
+      <div class="credits-breakdown">
+        <span>無料: <strong id="freeCount">-</strong>回</span>
+        <span>有料: <strong id="paidCount">-</strong>回</span>
+      </div>
+      <div class="credits-warning" id="creditsWarning"></div>
+      <div class="purchase-section">
+        <div class="purchase-info">100回チェックパック 980円</div>
+        <button class="btn btn-purchase" id="purchaseBtn">購入する</button>
       </div>
     </div>
-    
+
     <!-- 事業情報 -->
     <div class="section">
       <div class="section-title">事業情報</div>
-      
+
       <label for="businessType">事業内容</label>
       <input type="text" id="businessType" placeholder="例: フリーランスエンジニア + ブログ運営" maxlength="100">
-      
+
       <label for="industry">業種</label>
       <select id="industry">
         <option value="">選択してください</option>
@@ -408,7 +412,7 @@
         <option value="不動産業">不動産業</option>
         <option value="その他">その他</option>
       </select>
-      
+
       <label for="additionalInfo">その他の情報（任意）</label>
       <textarea id="additionalInfo" placeholder="例: 自宅兼事務所、車を事業で使用など" maxlength="200"></textarea>
     </div>
@@ -447,7 +451,7 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-      
+
       <div class="toggle-row">
         <span class="toggle-label">🟢判定時は自動で登録</span>
         <label class="toggle">
@@ -465,12 +469,12 @@
 
     <div class="status" id="status"></div>
   </div>
-  
+
   <div class="footer">
     <p>© 2026 freee取引入力 税務チェッカー</p>
     <p><a href="https://x.com/freeetaxchecker" target="_blank">@freeetaxchecker</a></p>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>
