@@ -1,4 +1,4 @@
-import { resetFreeIfNeeded, incrFreeUsed, getPaidRemaining, decrPaidRemaining } from './lib/redis.js';
+import { getMonthlyUsageCount, getFreeRemaining, logUsage, getPaidRemaining, decrPaidRemaining } from './lib/redis.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,14 +15,13 @@ export default async function handler(req, res) {
     }
 
     const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 5;
-
-    // 月初リセット処理を含む無料回数取得
-    const { freeRemaining } = await resetFreeIfNeeded(token);
+    const monthlyUsage = await getMonthlyUsageCount(token);
+    const freeRemaining = getFreeRemaining(monthlyUsage);
     const paidRemaining = await getPaidRemaining(token);
 
     // 消費順: 無料 → 有料
     if (freeRemaining > 0) {
-      await incrFreeUsed(token);
+      await logUsage(token);
       return res.status(200).json({
         allowed: true,
         free_remaining: freeRemaining - 1,
@@ -31,6 +30,7 @@ export default async function handler(req, res) {
     }
 
     if (paidRemaining > 0) {
+      await logUsage(token);
       const newPaid = await decrPaidRemaining(token);
       return res.status(200).json({
         allowed: true,
@@ -39,7 +39,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 両方とも残りなし
     return res.status(200).json({
       allowed: false,
       free_remaining: 0,

@@ -1,4 +1,4 @@
-import { resetFreeIfNeeded, getPaidRemaining } from './lib/redis.js';
+import { getMonthlyUsageCount, getFreeRemaining, getPaidRemaining } from './lib/redis.js';
 import { getPayPalClientId } from './lib/paypal.js';
 
 export default async function handler(req, res) {
@@ -15,8 +15,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'token is required' });
     }
 
-    // 月初リセット処理を含む無料回数取得
-    const { freeRemaining } = await resetFreeIfNeeded(token);
+    const monthlyUsage = await getMonthlyUsageCount(token);
+    const freeRemaining = getFreeRemaining(monthlyUsage);
     const paidRemaining = await getPaidRemaining(token);
 
     return res.status(200).json({

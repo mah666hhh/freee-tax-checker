@@ -19,34 +19,29 @@ function getRedis() {
   return redis;
 }
 
-// --- 無料利用回数 ---
+// --- 利用ログ (Sorted Set) ---
+// キー: ftc:usage_log:{token}
+// score: Unix timestamp (ms)
+// member: "{timestamp_ms}-{random}" (一意性保証)
 
-export async function getFreeUsed(token) {
+export async function logUsage(token) {
   const r = getRedis();
-  const val = await r.get(`ftc:free_used:${token}`);
-  return parseInt(val) || 0;
+  const now = Date.now();
+  const member = `${now}-${Math.random().toString(36).slice(2, 8)}`;
+  await r.zadd(`ftc:usage_log:${token}`, now, member);
+  return now;
 }
 
-export async function incrFreeUsed(token) {
+export async function getMonthlyUsageCount(token) {
   const r = getRedis();
-  return await r.incr(`ftc:free_used:${token}`);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  return await r.zcount(`ftc:usage_log:${token}`, monthStart, '+inf');
 }
 
-export async function resetFreeUsed(token) {
-  const r = getRedis();
-  await r.set(`ftc:free_used:${token}`, 0);
-}
-
-// --- 無料リセット日時 ---
-
-export async function getFreeResetAt(token) {
-  const r = getRedis();
-  return await r.get(`ftc:free_reset:${token}`);
-}
-
-export async function setFreeResetAt(token, isoString) {
-  const r = getRedis();
-  await r.set(`ftc:free_reset:${token}`, isoString);
+export function getFreeRemaining(monthlyUsage) {
+  const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 5;
+  return Math.max(0, freeLimit - monthlyUsage);
 }
 
 // --- 有料残回数 ---
@@ -65,7 +60,6 @@ export async function addPaidCredits(token, amount) {
 export async function decrPaidRemaining(token) {
   const r = getRedis();
   const val = await r.decr(`ftc:paid_remaining:${token}`);
-  // 万が一マイナスになったら0に戻す
   if (val < 0) {
     await r.set(`ftc:paid_remaining:${token}`, 0);
     return 0;
@@ -77,32 +71,11 @@ export async function decrPaidRemaining(token) {
 
 export async function setOrderIdempotent(orderId) {
   const r = getRedis();
-  // SETNX: キーが存在しなければセット（1を返す）、存在すれば何もしない（0を返す）
   const result = await r.setnx(`ftc:order:${orderId}`, '1');
   if (result === 1) {
-    // TTL: 1年
     await r.expire(`ftc:order:${orderId}`, 365 * 24 * 60 * 60);
   }
-  return result === 1; // true = 新規, false = 重複
-}
-
-// --- 月初リセット ---
-
-export async function resetFreeIfNeeded(token) {
-  const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 5;
-  const now = new Date();
-  const resetAtStr = await getFreeResetAt(token);
-
-  if (!resetAtStr || now >= new Date(resetAtStr)) {
-    // リセット実行
-    await resetFreeUsed(token);
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    await setFreeResetAt(token, nextMonth.toISOString());
-    return { freeUsed: 0, freeRemaining: freeLimit };
-  }
-
-  const freeUsed = await getFreeUsed(token);
-  return { freeUsed, freeRemaining: Math.max(0, freeLimit - freeUsed) };
+  return result === 1;
 }
 
 export { getRedis };
