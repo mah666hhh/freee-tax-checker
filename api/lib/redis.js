@@ -22,12 +22,17 @@ function getRedis() {
 // --- 利用ログ (Sorted Set) ---
 // キー: ftc:usage_log:{token}
 // score: Unix timestamp (ms)
-// member: "{timestamp_ms}-{random}" (一意性保証)
+// member: "JST日時-{random}" (可読性 + 一意性)
+
+function toJSTString(date) {
+  return date.toLocaleString('sv-SE', { timeZone: 'Asia/Tokyo' }).replace(' ', 'T') + '+09:00';
+}
 
 export async function logUsage(token) {
   const r = getRedis();
   const now = Date.now();
-  const member = `${now}-${Math.random().toString(36).slice(2, 8)}`;
+  const jst = toJSTString(new Date(now));
+  const member = `${jst}-${Math.random().toString(36).slice(2, 8)}`;
   await r.zadd(`ftc:usage_log:${token}`, now, member);
   return now;
 }
