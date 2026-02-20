@@ -121,28 +121,34 @@
           text-align: center;
           box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         ">
-          <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
-          <h3 style="margin: 0 0 12px; font-size: 18px; color: #333;">
-            有料機能です
+          <div style="font-size: 48px; margin-bottom: 16px;">🔓</div>
+          <h3 style="margin: 0 0 8px; font-size: 18px; color: #2e7d32;">
+            チェックパックで解放
           </h3>
-          <p style="margin: 0 0 20px; font-size: 14px; color: #666; line-height: 1.6;">
-            勘定科目フィルターはチェックパック購入者限定機能です。<br>
-            50回チェックパック（980円）を購入するとご利用いただけます。
+          <p style="margin: 0 0: 6px; font-size: 13px; color: #666; line-height: 1.6;">
+            勘定科目フィルター + 編集時AIチェック
+          </p>
+          <p style="margin: 0 0 16px; font-size: 22px; font-weight: 800; color: #2e7d32;">
+            1,480<span style="font-size: 13px; font-weight: normal; color: #666;">円 / 100回</span>
+          </p>
+          <p style="margin: 0 0 16px; font-size: 11px; color: #888;">
+            1回あたり約14.8円・有効期限なし
           </p>
           <button id="ftc-upgrade-purchase" style="
                display: block;
                width: 100%;
-               background: #4CAF50;
+               background: linear-gradient(135deg, #4CAF50, #388E3C);
                color: white;
                padding: 12px 24px;
-               border-radius: 6px;
+               border-radius: 8px;
                border: none;
-               font-weight: bold;
+               font-weight: 700;
                font-size: 16px;
                cursor: pointer;
                margin-bottom: 12px;
+               box-shadow: 0 2px 8px rgba(76,175,80,0.3);
              ">
-            購入する（980円 / 50回）
+            チェックパックを購入
           </button>
           <button id="ftc-upgrade-close" style="
             background: none;

@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     }
 
     // 金額検証
-    const expectedPrice = process.env.FTC_PRODUCT_PRICE || '980';
+    const expectedPrice = process.env.FTC_PRODUCT_PRICE || '1480';
     const capturedAmount = capture.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
     if (!capturedAmount || capturedAmount.value !== expectedPrice || capturedAmount.currency_code !== 'JPY') {
       console.error('Amount mismatch:', capturedAmount);
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     }
 
     // クレジット加算
-    const credits = parseInt(process.env.FTC_PAID_CREDITS) || 50;
+    const credits = parseInt(process.env.FTC_PAID_CREDITS) || 100;
     await addPaidCredits(userToken, credits);
 
     return res.redirect(302, `${APP_BASE_URL}/payment-success.html`);

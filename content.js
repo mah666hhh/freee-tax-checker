@@ -341,10 +341,26 @@
       console.log('[freee税務チェッカー] 保存ボタンをフック');
       saveBtn.dataset.ftcHooked = 'true';
 
+      // フック時の初期値をキャプチャ
+      const initialData = getEditDealData(editorEl);
+
       saveBtn.addEventListener('click', async (e) => {
         if (skipNextCheck) {
           console.log('[freee税務チェッカー] チェックスキップ、元の保存処理を実行');
           skipNextCheck = false;
+          return;
+        }
+
+        const dealData = getEditDealData(editorEl);
+
+        // フォームに変更がない場合はチェックせずそのまま保存
+        if (dealData.accountItem === initialData.accountItem &&
+            dealData.amount === initialData.amount &&
+            dealData.description === initialData.description &&
+            dealData.date === initialData.date &&
+            dealData.partner === initialData.partner &&
+            dealData.type === initialData.type) {
+          console.log('[freee税務チェッカー] 編集フォームに変更なし、チェックスキップ');
           return;
         }
 
@@ -366,7 +382,6 @@
         e.preventDefault();
         e.stopPropagation();
 
-        const dealData = getEditDealData(editorEl);
         console.log('[freee税務チェッカー] 編集取引データ:', dealData);
 
         // 収入の場合はチェックせずそのまま保存

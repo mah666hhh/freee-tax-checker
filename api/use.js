@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'token is required' });
     }
 
-    const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 5;
+    const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 3;
     const monthlyUsage = await getMonthlyUsageCount(token);
     const freeRemaining = getFreeRemaining(monthlyUsage);
     const paidRemaining = await getPaidRemaining(token);

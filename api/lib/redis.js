@@ -45,7 +45,7 @@ export async function getMonthlyUsageCount(token) {
 }
 
 export function getFreeRemaining(monthlyUsage) {
-  const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 5;
+  const freeLimit = parseInt(process.env.FTC_FREE_LIMIT) || 3;
   return Math.max(0, freeLimit - monthlyUsage);
 }
 

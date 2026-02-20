@@ -16,8 +16,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'token is required' });
     }
 
-    const price = process.env.FTC_PRODUCT_PRICE || '980';
-    const credits = process.env.FTC_PAID_CREDITS || '50';
+    const price = process.env.FTC_PRODUCT_PRICE || '1480';
+    const credits = process.env.FTC_PAID_CREDITS || '100';
 
     const accessToken = await getPayPalAccessToken();
     const base = getPayPalBaseUrl();
