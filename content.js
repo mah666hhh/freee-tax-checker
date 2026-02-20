@@ -55,7 +55,7 @@
   }
 
   // モーダル表示
-  function showModal(result, onProceed, autoRegister = true) {
+  function showModal(result, onProceed, autoRegister = true, isEdit = false) {
     let modal = document.getElementById('ftc-modal');
     if (!modal) {
       modal = createModal();
@@ -115,8 +115,9 @@
       questionsSection.style.display = 'none';
     }
 
-    // 「このまま登録」ボタン
+    // 「このまま登録/保存」ボタン
     const proceedBtn = modal.querySelector('.ftc-btn-proceed');
+    proceedBtn.textContent = isEdit ? 'このまま保存' : 'このまま登録';
     proceedBtn.onclick = () => {
       hideModal();
       if (onProceed) onProceed();
@@ -189,6 +190,27 @@
     };
   }
 
+  // 編集フォームから取引データを取得
+  function getEditDealData(editorEl) {
+    const isExpense = !!editorEl.querySelector('.expense-box');
+    const accountItem = editorEl.querySelector('.input-account-item')?.value || '';
+    const amountStr = editorEl.querySelector('.input-line-amount')?.value || '0';
+    const amount = parseInt(amountStr.replace(/,/g, ''), 10) || 0;
+    const description = editorEl.querySelector('input[name="description"]')?.value || '';
+    const date = editorEl.querySelector('.issue-date input[type="text"]')?.value || '';
+    const partner = editorEl.querySelector('.tags-combobox__tag-input[data-test="tags-combobox-history-partner"]')?.value || '';
+
+    return {
+      type: isExpense ? 'expense' : 'income',
+      accountItem,
+      amount,
+      description,
+      date,
+      partner,
+      wallet: ''
+    };
+  }
+
   // チェックをスキップするフラグ
   let skipNextCheck = false;
 
@@ -240,7 +262,7 @@
   }
 
   // AIチェックを実行
-  function performCheck(registerBtn, dealData) {
+  function performCheck(registerBtn, dealData, isEdit = false) {
       // ローディング表示（テキストは変更せず、スタイルのみ変更してfreeeの状態管理を壊さない）
       const originalBg = registerBtn.style.background;
       registerBtn.disabled = true;
@@ -280,7 +302,7 @@
               // autoRegister設定を取得してモーダル表示
               chrome.storage.local.get(['autoRegister'], (settings) => {
                 const autoRegister = settings.autoRegister !== false; // デフォルトtrue
-                showModal(response.data, () => proceedWithRegistration(registerBtn), autoRegister);
+                showModal(response.data, () => proceedWithRegistration(registerBtn), autoRegister, isEdit);
               });
             } else {
               const errorMsg = response?.error || JSON.stringify(response);
@@ -309,10 +331,66 @@
     btn.click();
   }
 
+  // 編集フォームの保存ボタンをフック（有料ユーザーのみ）
+  function hookSaveButton() {
+    const editors = document.querySelectorAll('.deal-editor[data-testid="deal-editor-INLINE"]');
+    editors.forEach((editorEl) => {
+      const saveBtn = editorEl.querySelector('.vb-withSideContent__content .btn.btn-primary');
+      if (!saveBtn || saveBtn.dataset.ftcHooked) return;
+
+      console.log('[freee税務チェッカー] 保存ボタンをフック');
+      saveBtn.dataset.ftcHooked = 'true';
+
+      saveBtn.addEventListener('click', async (e) => {
+        if (skipNextCheck) {
+          console.log('[freee税務チェッカー] チェックスキップ、元の保存処理を実行');
+          skipNextCheck = false;
+          return;
+        }
+
+        // 有料ユーザーのみチェックを実行
+        const storage = await new Promise(resolve =>
+          chrome.storage.local.get(['hasPurchased', 'paidRemaining', 'enabled'], resolve)
+        );
+
+        // チェックが無効の場合はスキップ
+        if (storage.enabled === false) {
+          return;
+        }
+
+        // 未購入または残回数0の場合はチェックせずそのまま保存
+        if (!storage.hasPurchased && (!storage.paidRemaining || storage.paidRemaining <= 0)) {
+          return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const dealData = getEditDealData(editorEl);
+        console.log('[freee税務チェッカー] 編集取引データ:', dealData);
+
+        // 収入の場合はチェックせずそのまま保存
+        if (dealData.type === 'income') {
+          proceedWithRegistration(saveBtn);
+          return;
+        }
+
+        // 金額0または勘定科目なしの場合もスキップ
+        if (!dealData.accountItem || dealData.amount === 0) {
+          proceedWithRegistration(saveBtn);
+          return;
+        }
+
+        performCheck(saveBtn, dealData, true);
+      }, true);
+    });
+  }
+
   // DOM監視でフォームの出現を検知
   function observeDOM() {
     const observer = new MutationObserver(() => {
       hookRegisterButton();
+      hookSaveButton();
     });
 
     observer.observe(document.body, {
@@ -322,6 +400,7 @@
 
     // 初回チェック
     hookRegisterButton();
+    hookSaveButton();
   }
 
   // 初期化
