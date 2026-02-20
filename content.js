@@ -341,8 +341,12 @@
       console.log('[freee税務チェッカー] 保存ボタンをフック');
       saveBtn.dataset.ftcHooked = 'true';
 
-      // フック時の初期値をキャプチャ
-      const initialData = getEditDealData(editorEl);
+      // フォームの値が読み込まれるのを待ってから初期値をキャプチャ
+      let initialData = null;
+      setTimeout(() => {
+        initialData = getEditDealData(editorEl);
+        console.log('[freee税務チェッカー] 編集フォーム初期値:', initialData);
+      }, 500);
 
       saveBtn.addEventListener('click', async (e) => {
         if (skipNextCheck) {
@@ -352,6 +356,13 @@
         }
 
         const dealData = getEditDealData(editorEl);
+
+        // 初期値が取れていない場合はここでキャプチャ（初回クリックはスキップ）
+        if (!initialData) {
+          initialData = dealData;
+          console.log('[freee税務チェッカー] 初期値未取得のためスキップ');
+          return;
+        }
 
         // フォームに変更がない場合はチェックせずそのまま保存
         if (dealData.accountItem === initialData.accountItem &&
