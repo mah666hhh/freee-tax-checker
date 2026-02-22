@@ -148,11 +148,12 @@ body {
 
 .btn-danger {
   background: transparent;
-  color: #ef5350;
-  border: 1px solid #ef5350;
+  color: #7777aa;
+  border: 1px solid #2a2a4a;
   margin-left: auto;
+  font-size: 11px;
 }
-.btn-danger:hover { background: rgba(239,83,80,0.1); }
+.btn-danger:hover { background: rgba(239,83,80,0.1); color: #ef5350; border-color: #ef5350; }
 
 /* 凡例 */
 .legend {
@@ -366,6 +367,12 @@ body {
 .btn-confirm-cancel { background: #1a1a2e; color: #8888aa; border: 1px solid #2a2a4a; }
 .btn-confirm-ok { background: #ef5350; color: #fff; }
 .btn-confirm-ok:hover { background: #c62828; }
+
+.btn-pro-upgrade {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+  color: #fff;
+}
+.btn-pro-upgrade:hover { background: linear-gradient(135deg, #1565c0, #0d47a1); }
 
 /* Pro バッジ */
 .pro-badge {

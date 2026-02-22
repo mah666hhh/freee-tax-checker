@@ -210,11 +210,54 @@
   function exportHistory(format) {
     chrome.storage.local.get(['hasSubscription'], (result) => {
       if (!result.hasSubscription) {
-        alert('エクスポートはPro限定機能です。Proプランに登録するとご利用いただけます。');
+        showProUpgradeDialog();
         return;
       }
       doExport(format);
     });
+  }
+
+  function showProUpgradeDialog() {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+
+    const dialog = document.createElement('div');
+    dialog.className = 'confirm-dialog';
+
+    const icon = document.createElement('div');
+    icon.style.cssText = 'font-size: 32px; margin-bottom: 8px;';
+    icon.textContent = '🔒';
+
+    const h3 = document.createElement('h3');
+    h3.textContent = 'エクスポートはPro限定機能です';
+
+    const p = document.createElement('p');
+    p.textContent = 'Proプランに登録すると、履歴の無制限保持・エクスポート・変更理由メモが利用できます。';
+
+    const actions = document.createElement('div');
+    actions.className = 'confirm-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-confirm-cancel';
+    cancelBtn.textContent = '閉じる';
+    cancelBtn.addEventListener('click', () => document.body.removeChild(overlay));
+
+    const upgradeBtn = document.createElement('button');
+    upgradeBtn.className = 'btn btn-pro-upgrade';
+    upgradeBtn.textContent = 'Proプランに登録する';
+    upgradeBtn.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+      chrome.runtime.openOptionsPage();
+    });
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(upgradeBtn);
+    dialog.appendChild(icon);
+    dialog.appendChild(h3);
+    dialog.appendChild(p);
+    dialog.appendChild(actions);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
   }
 
   function doExport(format) {
