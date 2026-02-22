@@ -691,10 +691,6 @@
                   after: null,
                   changes: Object.keys(beforeData),
                   timestamp: Date.now()
-                }, (saveResponse) => {
-                  if (saveResponse?.success && saveResponse.recordId) {
-                    showMemoInput(saveResponse.recordId);
-                  }
                 });
                 return;
               }
