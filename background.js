@@ -312,7 +312,7 @@ async function handleSaveHistory(request, sendResponse) {
   try {
     const { dealId, action, before, after, changes, timestamp } = request;
 
-    const data = await getStorageData([HISTORY_STORAGE_KEY, 'hasSubscription']);
+    const data = await getStorageData([HISTORY_STORAGE_KEY, 'userToken']);
     const history = data[HISTORY_STORAGE_KEY] || { records: [], version: HISTORY_VERSION };
 
     const record = {
@@ -328,8 +328,27 @@ async function handleSaveHistory(request, sendResponse) {
 
     history.records.unshift(record);
 
-    // 無料ユーザー: 30日超過レコードを削除
-    if (!data.hasSubscription) {
+    // サーバーでサブスク状態を確認して保持期間を適用
+    let isProVerified = false;
+    try {
+      if (data.userToken) {
+        const res = await fetch(`${API_BASE_URL}/api/init`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: data.userToken })
+        });
+        const initData = await res.json();
+        isProVerified = initData.subscription?.status === 'active';
+        // ローカルキャッシュも更新
+        await setStorageData({ hasSubscription: isProVerified });
+      }
+    } catch (e) {
+      // ネットワークエラー時はローカルキャッシュにフォールバック
+      const cached = await getStorageData(['hasSubscription']);
+      isProVerified = !!cached.hasSubscription;
+    }
+
+    if (!isProVerified) {
       const cutoff = Date.now() - (FREE_RETENTION_DAYS * 24 * 60 * 60 * 1000);
       history.records = history.records.filter(r => r.timestamp > cutoff);
     }
