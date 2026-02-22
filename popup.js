@@ -71,12 +71,12 @@ function initPopup() {
           t.style.background = '#1976d2';
           t.style.color = '#fff';
           t.classList.add('active');
-          if (discountSpan) discountSpan.style.color = '#ffe082';
+          if (discountSpan) { discountSpan.style.background = '#ff6d00'; discountSpan.style.color = '#fff'; }
         } else {
           t.style.background = '#fff';
           t.style.color = '#555';
           t.classList.remove('active');
-          if (discountSpan) discountSpan.style.color = '#888';
+          if (discountSpan) { discountSpan.style.background = '#e0e0e0'; discountSpan.style.color = '#888'; }
         }
       });
     });
