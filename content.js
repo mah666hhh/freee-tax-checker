@@ -56,6 +56,10 @@
           after: afterData,
           changes,
           timestamp: Date.now()
+        }, (saveResponse) => {
+          if (saveResponse?.success && saveResponse.recordId) {
+            showMemoInput(saveResponse.recordId);
+          }
         });
         if (onSuccess) onSuccess();
       }
@@ -622,34 +626,51 @@
   function loadHistoryForPanel(dealId) {
     if (!chrome?.runtime?.sendMessage) return;
 
-    chrome.runtime.sendMessage(
-      { type: 'GET_HISTORY', dealId, pageSize: 50 },
-      (response) => {
-        if (chrome.runtime.lastError) return;
-        const panel = document.getElementById('ftc-history-panel');
-        if (!panel) return;
+    chrome.storage.local.get(['hasSubscription'], (storageResult) => {
+      const isPro = !!storageResult.hasSubscription;
+      const pageSize = isPro ? 50 : 3;
 
-        const titleEl = panel.querySelector('.ftc-history-title');
-        const listEl = panel.querySelector('.ftc-history-list');
+      chrome.runtime.sendMessage(
+        { type: 'GET_HISTORY', dealId, pageSize: 50 },
+        (response) => {
+          if (chrome.runtime.lastError) return;
+          const panel = document.getElementById('ftc-history-panel');
+          if (!panel) return;
 
-        if (!response?.success || !response.records.length) {
-          titleEl.textContent = '変更履歴（0件）';
+          const titleEl = panel.querySelector('.ftc-history-title');
+          const listEl = panel.querySelector('.ftc-history-list');
+
+          if (!response?.success || !response.records.length) {
+            titleEl.textContent = '変更履歴（0件）';
+            listEl.textContent = '';
+            const empty = document.createElement('div');
+            empty.className = 'ftc-history-empty';
+            empty.textContent = 'この取引の変更履歴はありません';
+            listEl.appendChild(empty);
+            return;
+          }
+
+          titleEl.textContent = `変更履歴（${response.total}件）`;
           listEl.textContent = '';
-          const empty = document.createElement('div');
-          empty.className = 'ftc-history-empty';
-          empty.textContent = 'この取引の変更履歴はありません';
-          listEl.appendChild(empty);
-          return;
-        }
 
-        titleEl.textContent = `変更履歴（${response.total}件）`;
-        // DOM構築で各レコードを追加
-        listEl.textContent = '';
-        response.records.forEach(r => {
-          listEl.appendChild(buildHistoryRecordEl(r));
-        });
-      }
-    );
+          const displayRecords = isPro ? response.records : response.records.slice(0, 3);
+          displayRecords.forEach(r => {
+            listEl.appendChild(buildHistoryRecordEl(r));
+          });
+
+          // 無料ユーザーで4件以上ある場合はPro導線
+          if (!isPro && response.total > 3) {
+            const upgrade = document.createElement('div');
+            upgrade.className = 'ftc-history-upgrade';
+            upgrade.textContent = 'Proで全件表示 →';
+            upgrade.addEventListener('click', () => {
+              chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
+            });
+            listEl.appendChild(upgrade);
+          }
+        }
+      );
+    });
   }
 
   const FIELD_LABELS = {
@@ -712,7 +733,88 @@
       el.appendChild(row);
     });
 
+    // メモ表示
+    if (record.memo) {
+      const memoEl = document.createElement('div');
+      memoEl.className = 'ftc-history-memo';
+      memoEl.textContent = `メモ: ${record.memo}`;
+      el.appendChild(memoEl);
+    }
+
     return el;
+  }
+
+  // メモ入力UI表示
+  function showMemoInput(recordId) {
+    // 既存のメモUIを除去
+    const existing = document.getElementById('ftc-memo-container');
+    if (existing) existing.remove();
+
+    chrome.storage.local.get(['hasSubscription'], (result) => {
+      const isPro = !!result.hasSubscription;
+
+      const container = document.createElement('div');
+      container.id = 'ftc-memo-container';
+      container.className = 'ftc-memo-container';
+
+      if (isPro) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ftc-memo-input';
+        input.placeholder = '変更理由メモ（任意）';
+        input.maxLength = 200;
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'ftc-memo-save';
+        saveBtn.textContent = '保存';
+        saveBtn.addEventListener('click', () => {
+          const memo = input.value.trim();
+          if (!memo) { container.remove(); return; }
+          chrome.runtime.sendMessage({
+            type: 'UPDATE_HISTORY_MEMO',
+            recordId,
+            memo
+          }, () => {
+            container.textContent = '';
+            const done = document.createElement('span');
+            done.className = 'ftc-memo-done';
+            done.textContent = 'メモを保存しました';
+            container.appendChild(done);
+            setTimeout(() => container.remove(), 2000);
+          });
+        });
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'ftc-memo-close';
+        closeBtn.textContent = '×';
+        closeBtn.addEventListener('click', () => container.remove());
+
+        container.appendChild(input);
+        container.appendChild(saveBtn);
+        container.appendChild(closeBtn);
+      } else {
+        const link = document.createElement('span');
+        link.className = 'ftc-history-upgrade';
+        link.textContent = 'Proで変更理由メモを追加 →';
+        link.addEventListener('click', () => {
+          chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
+        });
+        container.appendChild(link);
+      }
+
+      // エディタ付近に挿入
+      const anchor = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"]')
+        || document.querySelector('#global-notification')
+        || document.querySelector('.deal-content');
+      if (anchor) {
+        anchor.parentNode.insertBefore(container, anchor.nextSibling);
+      } else {
+        document.body.appendChild(container);
+      }
+
+      // 10秒後に自動非表示
+      setTimeout(() => { if (container.parentNode) container.remove(); }, 10000);
+    });
   }
 
   // DOM監視でフォームの出現を検知

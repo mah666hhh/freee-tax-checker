@@ -70,7 +70,7 @@
     tbody.textContent = '';
     const loadingRow = document.createElement('tr');
     const loadingTd = document.createElement('td');
-    loadingTd.colSpan = 11;
+    loadingTd.colSpan = 12;
     loadingTd.className = 'loading';
     loadingTd.textContent = '読み込み中...';
     loadingRow.appendChild(loadingTd);
@@ -83,7 +83,7 @@
         tbody.textContent = '';
         const row = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 11;
+        td.colSpan = 12;
         td.className = 'empty-state';
         td.textContent = '読み込みに失敗しました';
         row.appendChild(td);
@@ -96,7 +96,7 @@
       if (response.records.length === 0) {
         const row = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 11;
+        td.colSpan = 12;
         td.className = 'empty-state';
         td.textContent = '変更履歴はありません';
         row.appendChild(td);
@@ -165,6 +165,12 @@
       tr.appendChild(td);
     });
 
+    // メモ列
+    const tdMemo = document.createElement('td');
+    tdMemo.className = 'col-memo';
+    tdMemo.textContent = record.memo || '-';
+    tr.appendChild(tdMemo);
+
     return tr;
   }
 
@@ -202,6 +208,16 @@
   }
 
   function exportHistory(format) {
+    chrome.storage.local.get(['hasSubscription'], (result) => {
+      if (!result.hasSubscription) {
+        alert('エクスポートはPro限定機能です。Proプランに登録するとご利用いただけます。');
+        return;
+      }
+      doExport(format);
+    });
+  }
+
+  function doExport(format) {
     chrome.runtime.sendMessage({ type: 'EXPORT_HISTORY', format }, (response) => {
       if (chrome.runtime.lastError || !response?.success) {
         alert('エクスポートに失敗しました');

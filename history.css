@@ -229,7 +229,8 @@ body {
 /* 長文になりうる列のみ折り返し */
 .history-table td:nth-child(5),   /* 取引先 */
 .history-table td:nth-child(10),  /* 品目・部門・メモタグ */
-.history-table td:nth-child(11) { /* 備考 */
+.history-table td:nth-child(11),  /* 備考 */
+.history-table td:nth-child(12) { /* メモ */
   white-space: normal;
   word-break: break-all;
   min-width: 120px;
@@ -365,3 +366,26 @@ body {
 .btn-confirm-cancel { background: #1a1a2e; color: #8888aa; border: 1px solid #2a2a4a; }
 .btn-confirm-ok { background: #ef5350; color: #fff; }
 .btn-confirm-ok:hover { background: #c62828; }
+
+/* Pro バッジ */
+.pro-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #333;
+  margin-left: 4px;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+
+/* メモ列 */
+.col-memo {
+  white-space: normal;
+  word-break: break-all;
+  min-width: 100px;
+  font-size: 11px;
+  color: #9999bb;
+}

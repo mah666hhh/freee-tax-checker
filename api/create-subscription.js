@@ -1,4 +1,4 @@
-import { getPayPalAccessToken, getPayPalBaseUrl } from './lib/paypal.js';
+import { getPayPalAccessToken, getPayPalBaseUrl, isSandbox } from './lib/paypal.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,12 +9,24 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { token } = req.body;
+    const { token, planType } = req.body;
     if (!token) {
       return res.status(400).json({ error: 'token is required' });
     }
 
-    const planId = process.env.PAYPAL_SUBSCRIPTION_PLAN_ID;
+    const sandbox = isSandbox();
+    const prefix = sandbox ? 'PAYPAL_SANDBOX_' : 'PAYPAL_';
+
+    let planId;
+    if (planType === 'yearly') {
+      planId = process.env[`${prefix}SUBSCRIPTION_PLAN_ID_YEARLY`];
+    } else {
+      planId = process.env[`${prefix}SUBSCRIPTION_PLAN_ID_MONTHLY`];
+    }
+    // フォールバック: 旧環境変数
+    if (!planId) {
+      planId = process.env.PAYPAL_SUBSCRIPTION_PLAN_ID;
+    }
     if (!planId) {
       return res.status(500).json({ error: 'Subscription plan not configured' });
     }

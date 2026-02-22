@@ -57,11 +57,33 @@ function initPopup() {
   const subscriptionSection = document.getElementById('subscriptionSection');
   const subscriptionActive = document.getElementById('subscriptionActive');
 
+  // プラン選択
+  let selectedPlan = 'monthly';
+  const planToggle = document.getElementById('planToggle');
+  if (planToggle) {
+    planToggle.addEventListener('click', (e) => {
+      const tab = e.target.closest('.plan-tab');
+      if (!tab) return;
+      selectedPlan = tab.dataset.plan;
+      planToggle.querySelectorAll('.plan-tab').forEach(t => {
+        if (t.dataset.plan === selectedPlan) {
+          t.style.background = '#1976d2';
+          t.style.color = '#fff';
+          t.classList.add('active');
+        } else {
+          t.style.background = '#fff';
+          t.style.color = '#555';
+          t.classList.remove('active');
+        }
+      });
+    });
+  }
+
   if (subscribeBtn) {
     subscribeBtn.addEventListener('click', () => {
       subscribeBtn.disabled = true;
       subscribeBtn.textContent = '処理中...';
-      chrome.runtime.sendMessage({ type: 'CREATE_SUBSCRIPTION' }, (response) => {
+      chrome.runtime.sendMessage({ type: 'CREATE_SUBSCRIPTION', planType: selectedPlan }, (response) => {
         if (chrome.runtime.lastError || !response?.success) {
           subscribeBtn.disabled = false;
           subscribeBtn.textContent = 'Proプランに登録';

@@ -73,8 +73,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.type === 'UPDATE_HISTORY_MEMO') {
+    handleUpdateHistoryMemo(request, sendResponse);
+    return true;
+  }
+
   if (request.type === 'CREATE_SUBSCRIPTION') {
-    handleCreateSubscription(sendResponse);
+    handleCreateSubscription(request, sendResponse);
     return true;
   }
 });
@@ -208,8 +213,35 @@ async function handleInitStatus(sendResponse) {
   }
 }
 
+// メモ更新
+async function handleUpdateHistoryMemo(request, sendResponse) {
+  try {
+    const { recordId, memo } = request;
+    if (!recordId) {
+      sendResponse({ success: false, error: 'recordId is required' });
+      return;
+    }
+
+    const data = await getStorageData([HISTORY_STORAGE_KEY]);
+    const history = data[HISTORY_STORAGE_KEY] || { records: [], version: HISTORY_VERSION };
+
+    const record = history.records.find(r => r.id === recordId);
+    if (!record) {
+      sendResponse({ success: false, error: 'レコードが見つかりません' });
+      return;
+    }
+
+    record.memo = memo || '';
+    await setStorageData({ [HISTORY_STORAGE_KEY]: history });
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error('[background] UPDATE_HISTORY_MEMO エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
 // サブスクリプション作成
-async function handleCreateSubscription(sendResponse) {
+async function handleCreateSubscription(request, sendResponse) {
   try {
     const { userToken } = await getStorageData(['userToken']);
     if (!userToken) {
@@ -217,10 +249,12 @@ async function handleCreateSubscription(sendResponse) {
       return;
     }
 
+    const planType = request.planType || 'monthly';
+
     const response = await fetch(`${API_BASE_URL}/api/create-subscription`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: userToken })
+      body: JSON.stringify({ token: userToken, planType })
     });
 
     const data = await response.json();
@@ -272,7 +306,7 @@ async function handleCreateOrder(sendResponse) {
 const HISTORY_STORAGE_KEY = 'ftcHistory';
 const HISTORY_BUDGET_BYTES = 8 * 1024 * 1024; // 8MB
 const HISTORY_VERSION = 1;
-const FREE_RETENTION_DAYS = 30;
+const FREE_RETENTION_DAYS = 7;
 
 async function handleSaveHistory(request, sendResponse) {
   try {
@@ -288,7 +322,8 @@ async function handleSaveHistory(request, sendResponse) {
       timestamp: timestamp || Date.now(),
       before: before || null,
       after: after,
-      changes: changes || []
+      changes: changes || [],
+      memo: ''
     };
 
     history.records.unshift(record);
@@ -406,7 +441,7 @@ async function handleExportHistory(request, sendResponse) {
       lines.push(`# ${HISTORY_DISCLAIMER}`);
       lines.push(`# エクスポート日時: ${new Date().toISOString()}`);
       lines.push('');
-      lines.push('ID,取引ID,操作,日時,変更前_種別,変更前_勘定科目,変更前_金額,変更前_摘要,変更前_日付,変更前_取引先,変更後_種別,変更後_勘定科目,変更後_金額,変更後_摘要,変更後_日付,変更後_取引先,変更フィールド');
+      lines.push('ID,取引ID,操作,日時,変更前_種別,変更前_勘定科目,変更前_金額,変更前_摘要,変更前_日付,変更前_取引先,変更後_種別,変更後_勘定科目,変更後_金額,変更後_摘要,変更後_日付,変更後_取引先,変更フィールド,メモ');
 
       for (const r of history.records) {
         const b = r.before || {};
@@ -418,7 +453,8 @@ async function handleExportHistory(request, sendResponse) {
           new Date(r.timestamp).toISOString(),
           b.type || '', b.accountItem || '', b.amount || '', csvEscape(b.description || ''), b.date || '', csvEscape(b.partner || ''),
           a.type || '', a.accountItem || '', a.amount || '', csvEscape(a.description || ''), a.date || '', csvEscape(a.partner || ''),
-          (r.changes || []).join(';')
+          (r.changes || []).join(';'),
+          csvEscape(r.memo || '')
         ];
         lines.push(row.join(','));
       }

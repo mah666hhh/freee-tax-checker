@@ -454,17 +454,25 @@
 
       <div id="subscriptionSection" style="margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #e3f2fd, #e8eaf6); border-radius: 8px; border: 1px solid #bbdefb; display: none;">
         <div style="text-align: center; font-size: 13px; font-weight: 700; color: #1565c0; margin-bottom: 6px;">
-          Proプラン — 履歴を無制限に保持
+          Proプラン
         </div>
         <div style="font-size: 11px; color: #555; text-align: center; margin-bottom: 8px; line-height: 1.5;">
-          無料: 30日分のみ保持<br>Pro: 無制限保持 + エクスポート
+          無制限保持 / エクスポート / 変更理由メモ
+        </div>
+        <div id="planToggle" style="display: flex; gap: 0; margin-bottom: 10px; border-radius: 6px; overflow: hidden; border: 1px solid #bbdefb;">
+          <button class="plan-tab active" data-plan="monthly" style="flex: 1; padding: 8px 0; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: #1976d2; color: #fff;">
+            月額 ¥480
+          </button>
+          <button class="plan-tab" data-plan="yearly" style="flex: 1; padding: 8px 0; font-size: 12px; font-weight: 600; border: none; cursor: pointer; background: #fff; color: #555;">
+            年額 ¥3,980<span style="display: block; font-size: 10px; font-weight: 400; color: #888;">約31%お得</span>
+          </button>
         </div>
         <button class="btn" id="subscribeBtn" style="width: 100%; background: linear-gradient(135deg, #1976d2, #1565c0); color: #fff; font-weight: 700; font-size: 13px; padding: 10px;">
           Proプランに登録
         </button>
       </div>
       <div id="subscriptionActive" style="margin-top: 8px; padding: 8px 12px; background: #e8f5e9; border-radius: 6px; font-size: 12px; color: #2e7d32; text-align: center; display: none;">
-        ✅ Proプラン有効 — 履歴を無制限に保持中
+        ✅ Proプラン有効
       </div>
     </div>
 
