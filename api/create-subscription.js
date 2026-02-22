@@ -56,8 +56,9 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('PayPal subscription error:', errorData);
-      return res.status(500).json({ error: 'サブスクリプションの作成に失敗しました' });
+      console.error('PayPal subscription error:', JSON.stringify(errorData));
+      console.error('Used planId:', planId, 'planType:', planType, 'sandbox:', sandbox);
+      return res.status(500).json({ error: 'サブスクリプションの作成に失敗しました', debug: { planType, sandbox, planIdPrefix: planId?.substring(0, 10) } });
     }
 
     const data = await response.json();
