@@ -614,7 +614,7 @@
         link.className = 'ftc-history-upgrade';
         link.textContent = 'Proで変更理由メモを追加 →';
         link.addEventListener('click', () => {
-          chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
+          chrome.runtime.sendMessage({ type: 'OPEN_PRO_PAGE' });
         });
         container.appendChild(link);
       }

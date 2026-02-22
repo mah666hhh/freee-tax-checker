@@ -78,6 +78,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.type === 'OPEN_PRO_PAGE') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') });
+    sendResponse({ success: true });
+    return true;
+  }
+
   if (request.type === 'CREATE_SUBSCRIPTION') {
     handleCreateSubscription(request, sendResponse);
     return true;
