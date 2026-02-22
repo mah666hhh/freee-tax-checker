@@ -561,189 +561,6 @@
     });
   }
 
-  // --- 変更履歴インラインパネル ---
-
-  function injectHistoryPanel() {
-    const dealId = getDealIdFromUrl();
-    if (!dealId) return;
-
-    const existing = document.getElementById('ftc-history-panel');
-    if (existing) {
-      loadHistoryForPanel(dealId);
-      return;
-    }
-
-    const anchor = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"]')
-      || document.querySelector('.deal-show')
-      || document.querySelector('.deal-content')
-      || document.querySelector('#deal-detail');
-
-    if (!anchor) return;
-
-    const panel = document.createElement('div');
-    panel.id = 'ftc-history-panel';
-    panel.className = 'ftc-history-panel';
-
-    // ヘッダー
-    const header = document.createElement('div');
-    header.className = 'ftc-history-header';
-    header.id = 'ftc-history-toggle';
-
-    const arrow = document.createElement('span');
-    arrow.className = 'ftc-history-arrow';
-    arrow.textContent = '▶';
-
-    const title = document.createElement('span');
-    title.className = 'ftc-history-title';
-    title.textContent = '変更履歴（読込中...）';
-
-    header.appendChild(arrow);
-    header.appendChild(title);
-
-    // ボディ
-    const body = document.createElement('div');
-    body.className = 'ftc-history-body';
-    body.style.display = 'none';
-
-    const list = document.createElement('div');
-    list.className = 'ftc-history-list';
-    body.appendChild(list);
-
-    panel.appendChild(header);
-    panel.appendChild(body);
-
-    anchor.parentNode.insertBefore(panel, anchor.nextSibling);
-
-    header.addEventListener('click', () => {
-      const isOpen = body.style.display !== 'none';
-      body.style.display = isOpen ? 'none' : 'block';
-      arrow.textContent = isOpen ? '▶' : '▼';
-    });
-
-    loadHistoryForPanel(dealId);
-  }
-
-  function loadHistoryForPanel(dealId) {
-    if (!chrome?.runtime?.sendMessage) return;
-
-    chrome.storage.local.get(['hasSubscription'], (storageResult) => {
-      const isPro = !!storageResult.hasSubscription;
-      const pageSize = isPro ? 50 : 3;
-
-      chrome.runtime.sendMessage(
-        { type: 'GET_HISTORY', dealId, pageSize: 50 },
-        (response) => {
-          if (chrome.runtime.lastError) return;
-          const panel = document.getElementById('ftc-history-panel');
-          if (!panel) return;
-
-          const titleEl = panel.querySelector('.ftc-history-title');
-          const listEl = panel.querySelector('.ftc-history-list');
-
-          if (!response?.success || !response.records.length) {
-            titleEl.textContent = '変更履歴（0件）';
-            listEl.textContent = '';
-            const empty = document.createElement('div');
-            empty.className = 'ftc-history-empty';
-            empty.textContent = 'この取引の変更履歴はありません';
-            listEl.appendChild(empty);
-            return;
-          }
-
-          titleEl.textContent = `変更履歴（${response.total}件）`;
-          listEl.textContent = '';
-
-          const displayRecords = isPro ? response.records : response.records.slice(0, 3);
-          displayRecords.forEach(r => {
-            listEl.appendChild(buildHistoryRecordEl(r));
-          });
-
-          // 無料ユーザーで4件以上ある場合はPro導線
-          if (!isPro && response.total > 3) {
-            const upgrade = document.createElement('div');
-            upgrade.className = 'ftc-history-upgrade';
-            upgrade.textContent = 'Proで全件表示 →';
-            upgrade.addEventListener('click', () => {
-              chrome.runtime.sendMessage({ type: 'OPEN_POPUP' });
-            });
-            listEl.appendChild(upgrade);
-          }
-        }
-      );
-    });
-  }
-
-  const FIELD_LABELS = {
-    type: '種別', date: '発生日', partner: '取引先', refNo: '管理番号',
-    accountItem: '勘定科目', taxCategory: '税区分', amount: '金額',
-    tags: '品目・部門・メモタグ', description: '備考'
-  };
-
-  // 表示順序
-  const DISPLAY_FIELDS = ['date', 'partner', 'refNo', 'accountItem', 'taxCategory', 'amount', 'tags', 'description'];
-
-  function buildHistoryRecordEl(record) {
-    const ts = new Date(record.timestamp);
-    const dateStr = `${ts.getFullYear()}-${String(ts.getMonth()+1).padStart(2,'0')}-${String(ts.getDate()).padStart(2,'0')} ${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}`;
-    const actionLabel = record.action === 'create' ? '新規作成' : '編集';
-    const actionClass = record.action === 'create' ? 'ftc-action-create' : 'ftc-action-edit';
-
-    const el = document.createElement('div');
-    el.className = 'ftc-history-record';
-
-    const headerEl = document.createElement('div');
-    headerEl.className = 'ftc-history-record-header';
-
-    const dateEl = document.createElement('span');
-    dateEl.className = 'ftc-history-date';
-    dateEl.textContent = dateStr;
-
-    const actionEl = document.createElement('span');
-    actionEl.className = `ftc-history-action ${actionClass}`;
-    actionEl.textContent = `[${actionLabel}]`;
-
-    headerEl.appendChild(dateEl);
-    headerEl.appendChild(actionEl);
-    el.appendChild(headerEl);
-
-    const data = record.after;
-    if (!data) return el;
-
-    const changedSet = new Set(record.changes || []);
-
-    DISPLAY_FIELDS.forEach(field => {
-      const val = String(data[field] ?? '');
-      const isChanged = changedSet.has(field);
-      if (!val && !isChanged) return; // 空かつ変更なしならスキップ
-
-      const row = document.createElement('div');
-      row.className = 'ftc-history-change';
-
-      const label = FIELD_LABELS[field] || field;
-
-      if (isChanged && record.before) {
-        const beforeVal = String(record.before[field] || '') || '(なし)';
-        const afterVal = val || '(なし)';
-        row.textContent = `${label}: ${beforeVal} → ${afterVal}`;
-        row.classList.add('ftc-history-changed');
-      } else {
-        row.textContent = `${label}: ${val}`;
-      }
-
-      el.appendChild(row);
-    });
-
-    // メモ表示
-    if (record.memo) {
-      const memoEl = document.createElement('div');
-      memoEl.className = 'ftc-history-memo';
-      memoEl.textContent = `メモ: ${record.memo}`;
-      el.appendChild(memoEl);
-    }
-
-    return el;
-  }
-
   // メモ入力UI表示
   function showMemoInput(recordId) {
     // 既存のメモUIを除去
@@ -822,7 +639,6 @@
     const observer = new MutationObserver(() => {
       hookRegisterButton();
       hookSaveButton();
-      injectHistoryPanel();
     });
 
     observer.observe(document.body, {
@@ -833,7 +649,6 @@
     // 初回チェック
     hookRegisterButton();
     hookSaveButton();
-    injectHistoryPanel();
   }
 
   // 初期化

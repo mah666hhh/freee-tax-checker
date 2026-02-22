@@ -44,6 +44,9 @@ function initPopup() {
 
   let currentAllocations = [];
 
+  // 直近3件の履歴を表示
+  loadRecentHistory();
+
   // 変更履歴ページを開く
   const openHistoryBtn = document.getElementById('openHistoryBtn');
   if (openHistoryBtn) {
@@ -337,5 +340,71 @@ function initPopup() {
   function showStatus(message, type) {
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
+  }
+
+  // 直近3件の履歴をポップアップに表示
+  function loadRecentHistory() {
+    const container = document.getElementById('recentHistory');
+    if (!container) return;
+
+    chrome.runtime.sendMessage({ type: 'GET_HISTORY', pageSize: 3 }, (response) => {
+      if (chrome.runtime.lastError || !response?.success || !response.records.length) {
+        container.textContent = '';
+        const empty = document.createElement('div');
+        empty.className = 'recent-empty';
+        empty.textContent = '変更履歴はまだありません';
+        container.appendChild(empty);
+        return;
+      }
+
+      container.textContent = '';
+      const LABELS = {
+        type: '種別', date: '発生日', partner: '取引先', accountItem: '勘定科目',
+        amount: '金額', description: '備考', refNo: '管理番号', taxCategory: '税区分', tags: 'タグ'
+      };
+
+      response.records.forEach(record => {
+        const el = document.createElement('div');
+        el.className = 'recent-record';
+
+        const header = document.createElement('div');
+        header.className = 'recent-header';
+        const ts = new Date(record.timestamp);
+        const dateStr = `${ts.getMonth()+1}/${ts.getDate()} ${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}`;
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'recent-date';
+        dateSpan.textContent = dateStr;
+
+        const actionSpan = document.createElement('span');
+        actionSpan.className = record.action === 'create' ? 'recent-action-create' : 'recent-action-edit';
+        actionSpan.textContent = record.action === 'create' ? '新規' : '編集';
+
+        header.appendChild(dateSpan);
+        header.appendChild(actionSpan);
+        el.appendChild(header);
+
+        const changes = record.changes || [];
+        changes.slice(0, 2).forEach(field => {
+          const row = document.createElement('div');
+          row.className = 'recent-change recent-changed';
+          const label = LABELS[field] || field;
+          const before = String(record.before?.[field] || '') || '(なし)';
+          const after = String(record.after?.[field] || '') || '(なし)';
+          row.textContent = `${label}: ${before} → ${after}`;
+          el.appendChild(row);
+        });
+
+        if (changes.length === 0 && record.action === 'create') {
+          const row = document.createElement('div');
+          row.className = 'recent-change';
+          const amount = (record.after?.amount || 0).toLocaleString();
+          row.textContent = `${record.after?.accountItem || ''} \u00a5${amount}`;
+          el.appendChild(row);
+        }
+
+        container.appendChild(el);
+      });
+    });
   }
 }

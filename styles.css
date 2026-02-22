@@ -222,104 +222,6 @@
   }
 }
 
-/* --- 変更履歴パネル --- */
-.ftc-history-panel {
-  margin: 8px 0;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 13px;
-}
-
-.ftc-history-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  background: #f8f9fa;
-  border-radius: 8px;
-  user-select: none;
-}
-
-.ftc-history-header:hover {
-  background: #e8f5e9;
-}
-
-.ftc-history-arrow {
-  font-size: 11px;
-  color: #666;
-  width: 14px;
-}
-
-.ftc-history-title {
-  font-weight: 600;
-  color: #333;
-}
-
-.ftc-history-body {
-  border-top: 1px solid #e0e0e0;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.ftc-history-list {
-  padding: 8px;
-}
-
-.ftc-history-empty {
-  text-align: center;
-  padding: 16px;
-  color: #999;
-  font-size: 12px;
-}
-
-.ftc-history-record {
-  padding: 8px 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.ftc-history-record:last-child {
-  border-bottom: none;
-}
-
-.ftc-history-record-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.ftc-history-date {
-  font-size: 12px;
-  color: #888;
-}
-
-.ftc-history-action {
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.ftc-action-edit {
-  color: #1976d2;
-}
-
-.ftc-action-create {
-  color: #4caf50;
-}
-
-.ftc-history-change {
-  font-size: 12px;
-  color: #555;
-  padding: 2px 0 2px 12px;
-  line-height: 1.5;
-}
-
-.ftc-history-changed {
-  color: #1565c0;
-  font-weight: 600;
-}
-
 /* Pro導線リンク */
 .ftc-history-upgrade {
   display: block;
@@ -336,14 +238,6 @@
   color: #0d47a1;
   background: #e3f2fd;
   border-radius: 4px;
-}
-
-/* メモ表示 */
-.ftc-history-memo {
-  font-size: 11px;
-  color: #888;
-  padding: 2px 0 2px 12px;
-  font-style: italic;
 }
 
 /* メモ入力コンテナ */
