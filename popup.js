@@ -58,7 +58,7 @@ function initPopup() {
   const subscriptionActive = document.getElementById('subscriptionActive');
 
   // プラン選択
-  let selectedPlan = 'monthly';
+  let selectedPlan = 'yearly';
   const planToggle = document.getElementById('planToggle');
   if (planToggle) {
     planToggle.addEventListener('click', (e) => {
@@ -66,14 +66,17 @@ function initPopup() {
       if (!tab) return;
       selectedPlan = tab.dataset.plan;
       planToggle.querySelectorAll('.plan-tab').forEach(t => {
+        const discountSpan = t.querySelector('span');
         if (t.dataset.plan === selectedPlan) {
           t.style.background = '#1976d2';
           t.style.color = '#fff';
           t.classList.add('active');
+          if (discountSpan) discountSpan.style.color = '#ffe082';
         } else {
           t.style.background = '#fff';
           t.style.color = '#555';
           t.classList.remove('active');
+          if (discountSpan) discountSpan.style.color = '#888';
         }
       });
     });
