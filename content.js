@@ -619,12 +619,20 @@
         container.appendChild(link);
       }
 
-      // エディタ付近に挿入
-      const anchor = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"]')
-        || document.querySelector('#global-notification')
-        || document.querySelector('.deal-content');
+      // 成功通知バーの直下、またはエディタ上部に挿入
+      const notifBar = document.querySelector('#global-notification');
+      const editor = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"]');
+      const anchor = notifBar || editor;
       if (anchor) {
-        anchor.parentNode.insertBefore(container, anchor.nextSibling);
+        // 固定位置で画面上部に表示
+        container.style.position = 'fixed';
+        container.style.top = '50px';
+        container.style.left = '50%';
+        container.style.transform = 'translateX(-50%)';
+        container.style.zIndex = '99998';
+        container.style.width = '400px';
+        container.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15)';
+        document.body.appendChild(container);
       } else {
         document.body.appendChild(container);
       }
