@@ -637,8 +637,16 @@
         document.body.appendChild(container);
       }
 
-      // 10秒後に自動非表示
-      setTimeout(() => { if (container.parentNode) container.remove(); }, 10000);
+      // 30秒後に自動非表示（入力中は延長）
+      let autoHideTimer = setTimeout(tryAutoHide, 30000);
+      function tryAutoHide() {
+        const input = container.querySelector('.ftc-memo-input');
+        if (input && (document.activeElement === input || input.value.trim())) {
+          autoHideTimer = setTimeout(tryAutoHide, 10000);
+          return;
+        }
+        if (container.parentNode) container.remove();
+      }
     });
   }
 
