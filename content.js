@@ -661,12 +661,12 @@
       console.log('[freee税務チェッカー] 削除ボタンをフック');
       deleteBtn.dataset.ftcDeleteHooked = 'true';
 
-      deleteBtn.addEventListener('click', () => {
-        // 削除前のデータをキャプチャ
-        const beforeData = getEditDealData(editorEl);
-        const dealId = getDealIdFromUrl();
-        console.log('[freee税務チェッカー] 削除検知、データキャプチャ:', beforeData);
+      // フック時点でデータを事前キャプチャ（click時のDOM読み取りを避ける）
+      const capturedData = getEditDealData(editorEl);
+      const dealId = getDealIdFromUrl();
+      console.log('[freee税務チェッカー] 削除用データ事前キャプチャ:', capturedData);
 
+      deleteBtn.addEventListener('click', () => {
         // 「取引を削除しました」通知を待って記録
         const container = document.querySelector('#global-notification');
         if (!container) return;
@@ -687,9 +687,9 @@
                   type: 'SAVE_HISTORY',
                   dealId: dealId || null,
                   action: 'delete',
-                  before: beforeData,
+                  before: capturedData,
                   after: null,
-                  changes: Object.keys(beforeData),
+                  changes: Object.keys(capturedData),
                   timestamp: Date.now()
                 });
                 return;
