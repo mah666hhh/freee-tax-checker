@@ -619,21 +619,21 @@
         container.appendChild(link);
       }
 
-      // 成功通知バーの直下、またはエディタ上部に挿入
-      const notifBar = document.querySelector('#global-notification');
-      const editor = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"]');
-      const anchor = notifBar || editor;
-      if (anchor) {
-        // 固定位置で画面上部に表示
-        container.style.position = 'fixed';
-        container.style.top = '50px';
-        container.style.left = '50%';
-        container.style.transform = 'translateX(-50%)';
-        container.style.zIndex = '99998';
-        container.style.width = '400px';
-        container.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15)';
-        document.body.appendChild(container);
+      // 保存ボタンの隣に挿入
+      const saveBtn = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"] .vb-withSideContent__content .btn.btn-primary');
+      const btnRow = saveBtn?.closest('.vb-withSideContent__content') || saveBtn?.parentElement;
+      if (btnRow) {
+        container.style.display = 'inline-flex';
+        container.style.marginLeft = '8px';
+        container.style.verticalAlign = 'middle';
+        btnRow.appendChild(container);
       } else {
+        // フォールバック: 保存ボタンが見つからない場合は通知バー下
+        container.style.position = 'fixed';
+        container.style.bottom = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '99998';
+        container.style.boxShadow = '0 2px 12px rgba(0,0,0,0.2)';
         document.body.appendChild(container);
       }
 

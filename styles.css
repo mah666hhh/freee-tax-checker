@@ -242,15 +242,20 @@
 
 /* メモ入力コンテナ */
 .ftc-memo-container {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  margin: 6px 0;
-  background: #f0f7ff;
-  border: 1px solid #bbdefb;
+  padding: 6px 10px;
+  background: #fff8e1;
+  border: 2px solid #ffc107;
   border-radius: 6px;
   font-size: 13px;
+  animation: ftc-memo-appear 0.3s ease-out;
+}
+
+@keyframes ftc-memo-appear {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .ftc-memo-input {
