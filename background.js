@@ -47,6 +47,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (request.type === 'SAVE_HISTORY') {
+    handleSaveHistory(request, sendResponse);
+    return true;
+  }
+
+  if (request.type === 'GET_HISTORY') {
+    handleGetHistory(request, sendResponse);
+    return true;
+  }
+
+  if (request.type === 'GET_STORAGE_STATS') {
+    handleGetStorageStats(sendResponse);
+    return true;
+  }
+
+  if (request.type === 'EXPORT_HISTORY') {
+    handleExportHistory(request, sendResponse);
+    return true;
+  }
+
+  if (request.type === 'CLEAR_HISTORY') {
+    handleClearHistory(sendResponse);
+    return true;
+  }
+
+  if (request.type === 'CREATE_SUBSCRIPTION') {
+    handleCreateSubscription(sendResponse);
+    return true;
+  }
 });
 
 // /api/use → /api/check の2ステップ
@@ -157,16 +187,52 @@ async function handleInitStatus(sendResponse) {
     if (data.paid_remaining > 0) {
       storageUpdate.hasPurchased = true;
     }
+    // サブスクリプション状態を保存
+    if (data.subscription?.status === 'active') {
+      storageUpdate.hasSubscription = true;
+    } else {
+      storageUpdate.hasSubscription = false;
+    }
     await setStorageData(storageUpdate);
 
     sendResponse({
       success: true,
       free_remaining: data.free_remaining,
       paid_remaining: data.paid_remaining,
-      paypal_client_id: data.paypal_client_id
+      paypal_client_id: data.paypal_client_id,
+      subscription: data.subscription
     });
   } catch (error) {
     console.error('[background] INIT_STATUS エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// サブスクリプション作成
+async function handleCreateSubscription(sendResponse) {
+  try {
+    const { userToken } = await getStorageData(['userToken']);
+    if (!userToken) {
+      sendResponse({ success: false, error: 'トークンがありません' });
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/create-subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: userToken })
+    });
+
+    const data = await response.json();
+
+    if (data.approval_url) {
+      chrome.tabs.create({ url: data.approval_url });
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: data.error || 'サブスクリプション作成に失敗しました' });
+    }
+  } catch (error) {
+    console.error('[background] CREATE_SUBSCRIPTION エラー:', error);
     sendResponse({ success: false, error: error.message });
   }
 }
@@ -197,6 +263,188 @@ async function handleCreateOrder(sendResponse) {
     }
   } catch (error) {
     console.error('[background] CREATE_ORDER エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// --- 変更履歴機能 ---
+
+const HISTORY_STORAGE_KEY = 'ftcHistory';
+const HISTORY_BUDGET_BYTES = 8 * 1024 * 1024; // 8MB
+const HISTORY_VERSION = 1;
+const FREE_RETENTION_DAYS = 30;
+
+async function handleSaveHistory(request, sendResponse) {
+  try {
+    const { dealId, action, before, after, changes, timestamp } = request;
+
+    const data = await getStorageData([HISTORY_STORAGE_KEY, 'hasSubscription']);
+    const history = data[HISTORY_STORAGE_KEY] || { records: [], version: HISTORY_VERSION };
+
+    const record = {
+      id: crypto.randomUUID(),
+      dealId: dealId || null,
+      action: action || 'edit',
+      timestamp: timestamp || Date.now(),
+      before: before || null,
+      after: after,
+      changes: changes || []
+    };
+
+    history.records.unshift(record);
+
+    // 無料ユーザー: 30日超過レコードを削除
+    if (!data.hasSubscription) {
+      const cutoff = Date.now() - (FREE_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+      history.records = history.records.filter(r => r.timestamp > cutoff);
+    }
+
+    // 容量チェック
+    const jsonSize = new Blob([JSON.stringify(history)]).size;
+    const usagePercent = (jsonSize / HISTORY_BUDGET_BYTES) * 100;
+
+    if (usagePercent >= 90) {
+      // 古いレコードを10%削除
+      const removeCount = Math.max(1, Math.floor(history.records.length * 0.1));
+      history.records.splice(history.records.length - removeCount, removeCount);
+    }
+
+    await setStorageData({ [HISTORY_STORAGE_KEY]: history });
+
+    sendResponse({
+      success: true,
+      recordId: record.id,
+      storageWarning: usagePercent >= 80 ? Math.round(usagePercent) : null
+    });
+  } catch (error) {
+    console.error('[background] SAVE_HISTORY エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleGetHistory(request, sendResponse) {
+  try {
+    const data = await getStorageData([HISTORY_STORAGE_KEY]);
+    const history = data[HISTORY_STORAGE_KEY] || { records: [], version: HISTORY_VERSION };
+
+    let records = history.records;
+
+    // dealIdでフィルタ
+    if (request.dealId) {
+      records = records.filter(r => r.dealId === request.dealId);
+    }
+
+    // 日付範囲フィルタ
+    if (request.dateFrom) {
+      records = records.filter(r => r.timestamp >= request.dateFrom);
+    }
+    if (request.dateTo) {
+      records = records.filter(r => r.timestamp <= request.dateTo);
+    }
+
+    // ページネーション
+    const page = request.page || 1;
+    const pageSize = request.pageSize || 20;
+    const total = records.length;
+    const start = (page - 1) * pageSize;
+    const paged = records.slice(start, start + pageSize);
+
+    sendResponse({
+      success: true,
+      records: paged,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize)
+    });
+  } catch (error) {
+    console.error('[background] GET_HISTORY エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleGetStorageStats(sendResponse) {
+  try {
+    const data = await getStorageData([HISTORY_STORAGE_KEY]);
+    const history = data[HISTORY_STORAGE_KEY] || { records: [], version: HISTORY_VERSION };
+
+    const jsonStr = JSON.stringify(history);
+    const sizeBytes = new Blob([jsonStr]).size;
+    const usagePercent = (sizeBytes / HISTORY_BUDGET_BYTES) * 100;
+
+    sendResponse({
+      success: true,
+      recordCount: history.records.length,
+      sizeBytes,
+      budgetBytes: HISTORY_BUDGET_BYTES,
+      usagePercent: Math.round(usagePercent * 10) / 10
+    });
+  } catch (error) {
+    console.error('[background] GET_STORAGE_STATS エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+const HISTORY_DISCLAIMER = '本データはChrome拡張機能がブラウザ上でローカルにキャプチャしたものであり、freee公式の取引履歴ではありません。データの正確性・完全性を保証するものではなく、参考情報としてご利用ください。';
+
+async function handleExportHistory(request, sendResponse) {
+  try {
+    const data = await getStorageData([HISTORY_STORAGE_KEY]);
+    const history = data[HISTORY_STORAGE_KEY] || { records: [], version: HISTORY_VERSION };
+    const format = request.format || 'json';
+
+    if (format === 'json') {
+      const exportData = {
+        disclaimer: HISTORY_DISCLAIMER,
+        exportDate: new Date().toISOString(),
+        recordCount: history.records.length,
+        records: history.records
+      };
+      sendResponse({ success: true, data: JSON.stringify(exportData, null, 2), format: 'json' });
+    } else if (format === 'csv') {
+      const lines = [];
+      lines.push(`# ${HISTORY_DISCLAIMER}`);
+      lines.push(`# エクスポート日時: ${new Date().toISOString()}`);
+      lines.push('');
+      lines.push('ID,取引ID,操作,日時,変更前_種別,変更前_勘定科目,変更前_金額,変更前_摘要,変更前_日付,変更前_取引先,変更後_種別,変更後_勘定科目,変更後_金額,変更後_摘要,変更後_日付,変更後_取引先,変更フィールド');
+
+      for (const r of history.records) {
+        const b = r.before || {};
+        const a = r.after || {};
+        const row = [
+          r.id,
+          r.dealId || '',
+          r.action,
+          new Date(r.timestamp).toISOString(),
+          b.type || '', b.accountItem || '', b.amount || '', csvEscape(b.description || ''), b.date || '', csvEscape(b.partner || ''),
+          a.type || '', a.accountItem || '', a.amount || '', csvEscape(a.description || ''), a.date || '', csvEscape(a.partner || ''),
+          (r.changes || []).join(';')
+        ];
+        lines.push(row.join(','));
+      }
+      sendResponse({ success: true, data: lines.join('\n'), format: 'csv' });
+    } else {
+      sendResponse({ success: false, error: '不正な形式: ' + format });
+    }
+  } catch (error) {
+    console.error('[background] EXPORT_HISTORY エラー:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+function csvEscape(str) {
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+async function handleClearHistory(sendResponse) {
+  try {
+    await setStorageData({ [HISTORY_STORAGE_KEY]: { records: [], version: HISTORY_VERSION } });
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error('[background] CLEAR_HISTORY エラー:', error);
     sendResponse({ success: false, error: error.message });
   }
 }

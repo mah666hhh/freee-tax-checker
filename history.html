@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>変更履歴 - freee取引入力 税務チェッカー</title>
+  <link rel="stylesheet" href="history.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 取引 変更履歴</h1>
+      <p>freee取引の変更をローカルに記録・管理</p>
+    </div>
+
+    <div class="content">
+      <!-- ストレージ情報 -->
+      <div class="stats-bar">
+        <span id="recordCount">- 件</span>
+        <span class="stats-sep">|</span>
+        <span>ストレージ: <span id="storageUsage">-</span>%</span>
+        <div class="storage-bar">
+          <div class="storage-bar-fill" id="storageBarFill"></div>
+        </div>
+      </div>
+
+      <!-- フィルタ -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>取引ID:</label>
+          <input type="text" id="filterDealId" placeholder="例: 12345">
+        </div>
+        <div class="filter-group">
+          <label>開始日:</label>
+          <input type="date" id="filterDateFrom">
+        </div>
+        <div class="filter-group">
+          <label>終了日:</label>
+          <input type="date" id="filterDateTo">
+        </div>
+        <button class="btn btn-filter" id="applyFilter">検索</button>
+        <button class="btn btn-filter-clear" id="clearFilter">クリア</button>
+      </div>
+
+      <!-- アクションバー -->
+      <div class="action-bar">
+        <button class="btn btn-export" id="exportJson">JSON エクスポート</button>
+        <button class="btn btn-export" id="exportCsv">CSV エクスポート</button>
+        <button class="btn btn-danger" id="clearHistory">履歴をクリア</button>
+      </div>
+
+      <!-- 凡例 -->
+      <div class="legend">
+        <span class="legend-item"><span class="legend-changed">背景黄色</span> = 変更されたフィールド</span>
+        <span class="legend-sep">|</span>
+        <span class="legend-item"><span class="legend-before">取り消し線</span> → <span class="legend-after">太字</span> = 変更前 → 変更後</span>
+        <span class="legend-sep">|</span>
+        <span class="legend-item">(なし) = 空欄</span>
+        <span class="legend-sep">|</span>
+        <span class="legend-item">- = 変更なし・元から空欄</span>
+      </div>
+
+      <!-- 履歴一覧 -->
+      <div class="table-wrapper">
+        <table class="history-table" id="historyTable">
+          <thead>
+            <tr>
+              <th class="col-date">日時</th>
+              <th class="col-action">操作</th>
+              <th class="col-deal-id">取引ID</th>
+              <th>発生日</th>
+              <th>取引先</th>
+              <th>管理番号</th>
+              <th>勘定科目</th>
+              <th>税区分</th>
+              <th class="col-amount">金額</th>
+              <th>品目・部門・メモタグ</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="11" class="loading">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ページネーション -->
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <div class="footer">
+      <p>※ 本データはブラウザ上でローカルにキャプチャした参考情報です。freee公式の履歴ではありません。</p>
+    </div>
+  </div>
+
+  <script src="history.js"></script>
+</body>
+</html>

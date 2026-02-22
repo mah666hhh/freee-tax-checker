@@ -5,6 +5,99 @@
 
   console.log('[freee税務チェッカー] content.js 読み込み完了');
 
+  // Deal IDをURLから取得
+  function getDealIdFromUrl() {
+    const match = window.location.pathname.match(/\/deals\/(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  // 成功通知を待ってから履歴を記録
+  function saveHistoryOnSuccess(beforeData, afterData, dealId, action, onSuccess) {
+    const changes = [];
+    if (beforeData && afterData) {
+      for (const key of Object.keys(afterData)) {
+        if (String(beforeData[key] || '') !== String(afterData[key] || '')) {
+          changes.push(key);
+        }
+      }
+    }
+    // 編集で変更が0件なら記録しない
+    if (action === 'edit' && beforeData && changes.length === 0) {
+      console.log('[freee税務チェッカー] 変更なし、履歴記録スキップ');
+      return;
+    }
+
+    // 通知の出現を監視
+    const container = document.querySelector('#global-notification');
+    if (!container) {
+      console.log('[freee税務チェッカー] 通知コンテナが見つからない、履歴記録スキップ');
+      return;
+    }
+
+    let resolved = false;
+
+    function handleNotification(notif) {
+      if (resolved) return;
+      if (notif.classList.contains('error')) {
+        resolved = true;
+        observer.disconnect();
+        console.log('[freee税務チェッカー] エラー通知検出、履歴記録スキップ');
+        return;
+      }
+      if (notif.classList.contains('success')) {
+        resolved = true;
+        observer.disconnect();
+        console.log('[freee税務チェッカー] 成功通知検出、履歴記録:', action, dealId, changes);
+        chrome.runtime.sendMessage({
+          type: 'SAVE_HISTORY',
+          dealId: dealId || null,
+          action: action || (beforeData ? 'edit' : 'create'),
+          before: beforeData || null,
+          after: afterData,
+          changes,
+          timestamp: Date.now()
+        });
+        if (onSuccess) onSuccess();
+      }
+    }
+
+    const observer = new MutationObserver((mutations) => {
+      if (resolved) return;
+      for (const mutation of mutations) {
+        // Case 1: style/classが変わった → 通知要素自体か確認
+        if (mutation.type === 'attributes') {
+          const target = mutation.target;
+          if (target.classList && target.classList.contains('notification') && target.style.display === 'block') {
+            handleNotification(target);
+            return;
+          }
+        }
+        // Case 2: 新しいノードが追加された → 通知要素を探す
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType !== 1) continue;
+            const notif = node.classList?.contains('notification') ? node : node.querySelector?.('.notification');
+            if (notif && notif.style.display !== 'none') {
+              handleNotification(notif);
+              return;
+            }
+          }
+        }
+      }
+    });
+
+    observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+
+    // 10秒タイムアウト
+    setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        observer.disconnect();
+        console.log('[freee税務チェッカー] 通知タイムアウト、履歴記録スキップ');
+      }
+    }, 10000);
+  }
+
   // モーダル要素を作成
   function createModal() {
     const modal = document.createElement('div');
@@ -168,24 +261,28 @@
     }
   }
 
-  // 取引データを取得
+  // 取引データを取得（新規登録フォーム）
   function getDealData() {
     const isExpense = document.querySelector('.deal-codes button[data-code="expense"]')?.classList.contains('active');
+    const date = document.querySelector('#settlement-date-input')?.value || '';
+    const partnerEl = document.querySelector('.tags-combobox__tag-input[data-test="tags-combobox-history-partner"]');
+    const partner = partnerEl?.value || '';
     const accountItem = document.querySelector('.input-account-item')?.value || '';
     const amountStr = document.querySelector('.sw-number-input')?.value || '0';
     const amount = parseInt(amountStr.replace(/,/g, ''), 10) || 0;
     const description = document.querySelector('input[name="description"]')?.value || '';
-    const date = document.querySelector('#settlement-date-input')?.value || '';
-    const partner = document.querySelector('.tags-combobox__tag-input[data-test="tags-combobox-history-partner"]')?.value || '';
     const wallet = document.querySelector('select[name="walletable_name"]')?.value || '';
 
     return {
       type: isExpense ? 'expense' : 'income',
-      accountItem,
-      amount,
-      description,
       date,
       partner,
+      refNo: '',
+      accountItem,
+      taxCategory: '',
+      amount,
+      tags: '',
+      description,
       wallet
     };
   }
@@ -193,21 +290,36 @@
   // 編集フォームから取引データを取得
   function getEditDealData(editorEl) {
     const isExpense = !!editorEl.querySelector('.expense-box');
+
+    // ヘッダー部分
+    const date = editorEl.querySelector('.issue-date input[type="text"]')?.value || '';
+    const partnerEl = editorEl.querySelector('.partner .tags-combobox__tagify-tag--partner .tags-combobox__tag-value');
+    const partner = partnerEl?.textContent?.trim() || '';
+    const refNo = editorEl.querySelector('input[name="ref"]')?.value || '';
+
+    // 収入/支出行
     const accountItem = editorEl.querySelector('.input-account-item')?.value || '';
+    const taxSelect = editorEl.querySelector('.taxes-select');
+    const taxCategory = taxSelect?.options?.[taxSelect.selectedIndex]?.value || taxSelect?.value || '';
     const amountStr = editorEl.querySelector('.input-line-amount')?.value || '0';
     const amount = parseInt(amountStr.replace(/,/g, ''), 10) || 0;
+
+    // 品目・部門・メモタグ（タグ一覧を取得）
+    const tagEls = editorEl.querySelectorAll('.line-tagbox .tags-combobox__tagify-tag--default .tags-combobox__tag-value');
+    const tags = Array.from(tagEls).map(el => el.textContent?.trim()).filter(Boolean).join(', ');
+
     const description = editorEl.querySelector('input[name="description"]')?.value || '';
-    const date = editorEl.querySelector('.issue-date input[type="text"]')?.value || '';
-    const partner = editorEl.querySelector('.tags-combobox__tag-input[data-test="tags-combobox-history-partner"]')?.value || '';
 
     return {
       type: isExpense ? 'expense' : 'income',
-      accountItem,
-      amount,
-      description,
       date,
       partner,
-      wallet: ''
+      refNo,
+      accountItem,
+      taxCategory,
+      amount,
+      tags,
+      description
     };
   }
 
@@ -238,13 +350,13 @@
 
       // 収入の場合はチェックせずそのまま登録
       if (dealData.type === 'income') {
-        proceedWithRegistration(registerBtn);
+        proceedWithRegistrationAndCapture(registerBtn, dealData);
         return;
       }
 
       // 金額0または勘定科目なしの場合もスキップ
       if (!dealData.accountItem || dealData.amount === 0) {
-        proceedWithRegistration(registerBtn);
+        proceedWithRegistrationAndCapture(registerBtn, dealData);
         return;
       }
 
@@ -252,7 +364,7 @@
       chrome.storage.local.get(['enabled'], (settings) => {
         if (settings.enabled === false) {
           console.log('[freee税務チェッカー] チェック無効のためスキップ');
-          proceedWithRegistration(registerBtn);
+          proceedWithRegistrationAndCapture(registerBtn, dealData);
           return;
         }
         // チェック有効の場合はAPI呼び出しへ
@@ -302,7 +414,10 @@
               // autoRegister設定を取得してモーダル表示
               chrome.storage.local.get(['autoRegister'], (settings) => {
                 const autoRegister = settings.autoRegister !== false; // デフォルトtrue
-                showModal(response.data, () => proceedWithRegistration(registerBtn), autoRegister, isEdit);
+                const onProceed = isEdit
+                  ? () => proceedWithRegistration(registerBtn)
+                  : () => proceedWithRegistrationAndCapture(registerBtn, dealData);
+                showModal(response.data, onProceed, autoRegister, isEdit);
               });
             } else {
               const errorMsg = response?.error || JSON.stringify(response);
@@ -331,7 +446,13 @@
     btn.click();
   }
 
-  // 編集フォームの保存ボタンをフック（有料ユーザーのみ）
+  // 登録後に履歴キャプチャ（新規登録用）
+  function proceedWithRegistrationAndCapture(btn, dealData) {
+    saveHistoryOnSuccess(null, dealData, getDealIdFromUrl(), 'create');
+    proceedWithRegistration(btn);
+  }
+
+  // 編集フォームの保存ボタンをフック
   function hookSaveButton() {
     const editors = document.querySelectorAll('.deal-editor[data-testid="deal-editor-INLINE"]');
     editors.forEach((editorEl) => {
@@ -341,17 +462,43 @@
       console.log('[freee税務チェッカー] 保存ボタンをフック');
       saveBtn.dataset.ftcHooked = 'true';
 
-      // フォームの値が読み込まれるのを待ってから初期値をキャプチャ
+      // フォームの値が安定するまでポーリングして初期値をキャプチャ
       let initialData = null;
+      let prevSnapshot = '';
+      let stableCount = 0;
+      const captureInterval = setInterval(() => {
+        const current = getEditDealData(editorEl);
+        const snapshot = JSON.stringify(current);
+        if (snapshot === prevSnapshot) {
+          stableCount++;
+          if (stableCount >= 2) { // 400ms安定したら確定
+            clearInterval(captureInterval);
+            initialData = current;
+            console.log('[freee税務チェッカー] 編集フォーム初期値:', initialData);
+          }
+        } else {
+          stableCount = 0;
+          prevSnapshot = snapshot;
+        }
+      }, 200);
+      // 最大3秒で打ち切り
       setTimeout(() => {
-        initialData = getEditDealData(editorEl);
-        console.log('[freee税務チェッカー] 編集フォーム初期値:', initialData);
-      }, 500);
+        if (!initialData) {
+          clearInterval(captureInterval);
+          initialData = getEditDealData(editorEl);
+          console.log('[freee税務チェッカー] 編集フォーム初期値(タイムアウト):', initialData);
+        }
+      }, 3000);
 
       saveBtn.addEventListener('click', async (e) => {
         if (skipNextCheck) {
           console.log('[freee税務チェッカー] チェックスキップ、元の保存処理を実行');
           skipNextCheck = false;
+          // 履歴キャプチャ（税務チェック経由の保存）
+          if (initialData) {
+            const afterData = getEditDealData(editorEl);
+            saveHistoryOnSuccess(initialData, afterData, getDealIdFromUrl(), 'edit', () => { initialData = afterData; });
+          }
           return;
         }
 
@@ -365,28 +512,23 @@
         }
 
         // フォームに変更がない場合はチェックせずそのまま保存
-        if (dealData.accountItem === initialData.accountItem &&
-            dealData.amount === initialData.amount &&
-            dealData.description === initialData.description &&
-            dealData.date === initialData.date &&
-            dealData.partner === initialData.partner &&
-            dealData.type === initialData.type) {
+        const hasChanges = Object.keys(dealData).some(key =>
+          String(dealData[key] || '') !== String(initialData[key] || '')
+        );
+        if (!hasChanges) {
           console.log('[freee税務チェッカー] 編集フォームに変更なし、チェックスキップ');
           return;
         }
 
-        // 有料ユーザーのみチェックを実行
+        // 有料ユーザーのみ税務チェックを実行（履歴キャプチャは全ユーザー対象）
         const storage = await new Promise(resolve =>
           chrome.storage.local.get(['hasPurchased', 'paidRemaining', 'enabled'], resolve)
         );
 
-        // チェックが無効の場合はスキップ
-        if (storage.enabled === false) {
-          return;
-        }
-
-        // 未購入または残回数0の場合はチェックせずそのまま保存
-        if (!storage.hasPurchased && (!storage.paidRemaining || storage.paidRemaining <= 0)) {
+        // チェックが無効の場合 or 未購入の場合は税務チェックスキップ、でも履歴はキャプチャ
+        if (storage.enabled === false ||
+            (!storage.hasPurchased && (!storage.paidRemaining || storage.paidRemaining <= 0))) {
+          saveHistoryOnSuccess(initialData, dealData, getDealIdFromUrl(), 'edit', () => { initialData = dealData; });
           return;
         }
 
@@ -397,19 +539,180 @@
 
         // 収入の場合はチェックせずそのまま保存
         if (dealData.type === 'income') {
+          saveHistoryOnSuccess(initialData, dealData, getDealIdFromUrl(), 'edit', () => { initialData = dealData; });
           proceedWithRegistration(saveBtn);
           return;
         }
 
         // 金額0または勘定科目なしの場合もスキップ
         if (!dealData.accountItem || dealData.amount === 0) {
+          saveHistoryOnSuccess(initialData, dealData, getDealIdFromUrl(), 'edit', () => { initialData = dealData; });
           proceedWithRegistration(saveBtn);
           return;
         }
 
+        // 税務チェック実行（履歴はskipNextCheck=true時にキャプチャされる）
         performCheck(saveBtn, dealData, true);
       }, true);
     });
+  }
+
+  // --- 変更履歴インラインパネル ---
+
+  function injectHistoryPanel() {
+    const dealId = getDealIdFromUrl();
+    if (!dealId) return;
+
+    const existing = document.getElementById('ftc-history-panel');
+    if (existing) {
+      loadHistoryForPanel(dealId);
+      return;
+    }
+
+    const anchor = document.querySelector('.deal-editor[data-testid="deal-editor-INLINE"]')
+      || document.querySelector('.deal-show')
+      || document.querySelector('.deal-content')
+      || document.querySelector('#deal-detail');
+
+    if (!anchor) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'ftc-history-panel';
+    panel.className = 'ftc-history-panel';
+
+    // ヘッダー
+    const header = document.createElement('div');
+    header.className = 'ftc-history-header';
+    header.id = 'ftc-history-toggle';
+
+    const arrow = document.createElement('span');
+    arrow.className = 'ftc-history-arrow';
+    arrow.textContent = '▶';
+
+    const title = document.createElement('span');
+    title.className = 'ftc-history-title';
+    title.textContent = '変更履歴（読込中...）';
+
+    header.appendChild(arrow);
+    header.appendChild(title);
+
+    // ボディ
+    const body = document.createElement('div');
+    body.className = 'ftc-history-body';
+    body.style.display = 'none';
+
+    const list = document.createElement('div');
+    list.className = 'ftc-history-list';
+    body.appendChild(list);
+
+    panel.appendChild(header);
+    panel.appendChild(body);
+
+    anchor.parentNode.insertBefore(panel, anchor.nextSibling);
+
+    header.addEventListener('click', () => {
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      arrow.textContent = isOpen ? '▶' : '▼';
+    });
+
+    loadHistoryForPanel(dealId);
+  }
+
+  function loadHistoryForPanel(dealId) {
+    if (!chrome?.runtime?.sendMessage) return;
+
+    chrome.runtime.sendMessage(
+      { type: 'GET_HISTORY', dealId, pageSize: 50 },
+      (response) => {
+        if (chrome.runtime.lastError) return;
+        const panel = document.getElementById('ftc-history-panel');
+        if (!panel) return;
+
+        const titleEl = panel.querySelector('.ftc-history-title');
+        const listEl = panel.querySelector('.ftc-history-list');
+
+        if (!response?.success || !response.records.length) {
+          titleEl.textContent = '変更履歴（0件）';
+          listEl.textContent = '';
+          const empty = document.createElement('div');
+          empty.className = 'ftc-history-empty';
+          empty.textContent = 'この取引の変更履歴はありません';
+          listEl.appendChild(empty);
+          return;
+        }
+
+        titleEl.textContent = `変更履歴（${response.total}件）`;
+        // DOM構築で各レコードを追加
+        listEl.textContent = '';
+        response.records.forEach(r => {
+          listEl.appendChild(buildHistoryRecordEl(r));
+        });
+      }
+    );
+  }
+
+  const FIELD_LABELS = {
+    type: '種別', date: '発生日', partner: '取引先', refNo: '管理番号',
+    accountItem: '勘定科目', taxCategory: '税区分', amount: '金額',
+    tags: '品目・部門・メモタグ', description: '備考'
+  };
+
+  // 表示順序
+  const DISPLAY_FIELDS = ['date', 'partner', 'refNo', 'accountItem', 'taxCategory', 'amount', 'tags', 'description'];
+
+  function buildHistoryRecordEl(record) {
+    const ts = new Date(record.timestamp);
+    const dateStr = `${ts.getFullYear()}-${String(ts.getMonth()+1).padStart(2,'0')}-${String(ts.getDate()).padStart(2,'0')} ${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}`;
+    const actionLabel = record.action === 'create' ? '新規作成' : '編集';
+    const actionClass = record.action === 'create' ? 'ftc-action-create' : 'ftc-action-edit';
+
+    const el = document.createElement('div');
+    el.className = 'ftc-history-record';
+
+    const headerEl = document.createElement('div');
+    headerEl.className = 'ftc-history-record-header';
+
+    const dateEl = document.createElement('span');
+    dateEl.className = 'ftc-history-date';
+    dateEl.textContent = dateStr;
+
+    const actionEl = document.createElement('span');
+    actionEl.className = `ftc-history-action ${actionClass}`;
+    actionEl.textContent = `[${actionLabel}]`;
+
+    headerEl.appendChild(dateEl);
+    headerEl.appendChild(actionEl);
+    el.appendChild(headerEl);
+
+    const data = record.after;
+    if (!data) return el;
+
+    const changedSet = new Set(record.changes || []);
+
+    DISPLAY_FIELDS.forEach(field => {
+      const val = String(data[field] ?? '');
+      const isChanged = changedSet.has(field);
+      if (!val && !isChanged) return; // 空かつ変更なしならスキップ
+
+      const row = document.createElement('div');
+      row.className = 'ftc-history-change';
+
+      const label = FIELD_LABELS[field] || field;
+
+      if (isChanged && record.before) {
+        const beforeVal = String(record.before[field] || '') || '(なし)';
+        const afterVal = val || '(なし)';
+        row.textContent = `${label}: ${beforeVal} → ${afterVal}`;
+        row.classList.add('ftc-history-changed');
+      } else {
+        row.textContent = `${label}: ${val}`;
+      }
+
+      el.appendChild(row);
+    });
+
+    return el;
   }
 
   // DOM監視でフォームの出現を検知
@@ -417,6 +720,7 @@
     const observer = new MutationObserver(() => {
       hookRegisterButton();
       hookSaveButton();
+      injectHistoryPanel();
     });
 
     observer.observe(document.body, {
@@ -427,6 +731,7 @@
     // 初回チェック
     hookRegisterButton();
     hookSaveButton();
+    injectHistoryPanel();
   }
 
   // 初期化

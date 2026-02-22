@@ -1,0 +1,367 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: #e0e0e0;
+  background: #1a1a2e;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  background: linear-gradient(135deg, #16213e, #0f3460);
+  color: #fff;
+  padding: 16px 20px;
+  border-radius: 10px 10px 0 0;
+  text-align: center;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.header p {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.content {
+  background: #16213e;
+  padding: 16px;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* ストレージ情報 */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #1a1a2e;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #8888aa;
+  margin-bottom: 12px;
+  border: 1px solid #2a2a4a;
+}
+
+.stats-sep {
+  color: #3a3a5a;
+}
+
+.storage-bar {
+  flex: 1;
+  max-width: 120px;
+  height: 6px;
+  background: #2a2a4a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.storage-bar-fill.warning { background: #ff9800; }
+.storage-bar-fill.danger { background: #f44336; }
+
+/* フィルタ */
+.filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.filter-group label {
+  font-size: 11px;
+  color: #7777aa;
+}
+
+.filter-group input {
+  padding: 5px 8px;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+}
+
+.filter-group input:focus {
+  outline: none;
+  border-color: #5c6bc0;
+}
+
+.filter-group input[type="text"] {
+  width: 100px;
+}
+
+/* ボタン */
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filter { background: #5c6bc0; color: #fff; }
+.btn-filter:hover { background: #3f51b5; }
+
+.btn-filter-clear { background: #1a1a2e; color: #8888aa; border: 1px solid #2a2a4a; }
+.btn-filter-clear:hover { background: #2a2a4a; }
+
+/* アクションバー */
+.action-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn-export { background: #1976d2; color: #fff; }
+.btn-export:hover { background: #1565c0; }
+
+.btn-danger {
+  background: transparent;
+  color: #ef5350;
+  border: 1px solid #ef5350;
+  margin-left: auto;
+}
+.btn-danger:hover { background: rgba(239,83,80,0.1); }
+
+/* 凡例 */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: #1a1a2e;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #7777aa;
+  flex-wrap: wrap;
+  border: 1px solid #2a2a4a;
+}
+
+.legend-sep { color: #3a3a5a; }
+
+.legend-changed {
+  background: rgba(255,235,59,0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,235,59,0.3);
+  color: #fdd835;
+}
+
+.legend-before {
+  color: #ef5350;
+  text-decoration: line-through;
+}
+
+.legend-after {
+  color: #66bb6a;
+  font-weight: 600;
+}
+
+/* テーブル */
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #2a2a4a;
+  border-radius: 6px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.history-table thead {
+  background: #0f3460;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.history-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  color: #8888bb;
+  border-bottom: 2px solid #2a2a4a;
+  white-space: nowrap;
+}
+
+.history-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #1a1a2e;
+  white-space: nowrap;
+}
+
+/* 長文になりうる列のみ折り返し */
+.history-table td:nth-child(5),   /* 取引先 */
+.history-table td:nth-child(10),  /* 品目・部門・メモタグ */
+.history-table td:nth-child(11) { /* 備考 */
+  white-space: normal;
+  word-break: break-all;
+  min-width: 120px;
+}
+
+.history-table tbody tr:hover {
+  background: #1a1a3e;
+}
+
+.col-date {
+  white-space: nowrap;
+  font-size: 11px;
+  color: #7777aa;
+}
+
+.col-action { text-align: center; }
+
+.col-deal-id {
+  font-size: 11px;
+  color: #6666aa;
+}
+
+.col-amount { text-align: right; }
+
+/* バッジ */
+.badge-edit {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(25,118,210,0.2);
+  color: #64b5f6;
+}
+
+.badge-create {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(76,175,80,0.2);
+  color: #66bb6a;
+}
+
+/* 変更セル */
+.cell-changed {
+  background: rgba(255,235,59,0.08);
+}
+
+.val-before {
+  color: #ef5350;
+  text-decoration: line-through;
+}
+
+.val-after {
+  color: #66bb6a;
+  font-weight: 600;
+}
+
+/* 空状態 */
+.loading, .empty-state {
+  text-align: center;
+  padding: 30px;
+  color: #6666aa;
+}
+
+/* ページネーション */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pagination button:hover { background: #2a2a4a; }
+.pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.page-info {
+  font-size: 12px;
+  color: #7777aa;
+  padding: 0 8px;
+}
+
+/* フッター */
+.footer {
+  text-align: center;
+  padding: 12px;
+  font-size: 11px;
+  color: #5555777;
+}
+
+/* 確認ダイアログ */
+.confirm-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.confirm-dialog {
+  background: #16213e;
+  border-radius: 10px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  border: 1px solid #2a2a4a;
+}
+
+.confirm-dialog h3 { margin-bottom: 12px; font-size: 16px; color: #e0e0e0; }
+.confirm-dialog p { margin-bottom: 20px; font-size: 14px; color: #8888aa; }
+
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-actions .btn { flex: 1; padding: 10px; }
+
+.btn-confirm-cancel { background: #1a1a2e; color: #8888aa; border: 1px solid #2a2a4a; }
+.btn-confirm-ok { background: #ef5350; color: #fff; }
+.btn-confirm-ok:hover { background: #c62828; }

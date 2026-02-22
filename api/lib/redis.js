@@ -83,4 +83,17 @@ export async function setOrderIdempotent(orderId) {
   return result === 1;
 }
 
+// --- サブスクリプション ---
+
+export async function getSubscriptionStatus(token) {
+  const r = getRedis();
+  const val = await r.get(`ftc:subscription:${token}`);
+  if (!val) return null;
+  try {
+    return JSON.parse(val);
+  } catch (e) {
+    return null;
+  }
+}
+
 export { getRedis };

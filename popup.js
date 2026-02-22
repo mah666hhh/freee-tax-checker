@@ -44,6 +44,45 @@ function initPopup() {
 
   let currentAllocations = [];
 
+  // 変更履歴ページを開く
+  const openHistoryBtn = document.getElementById('openHistoryBtn');
+  if (openHistoryBtn) {
+    openHistoryBtn.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('history.html') });
+    });
+  }
+
+  // サブスクリプション
+  const subscribeBtn = document.getElementById('subscribeBtn');
+  const subscriptionSection = document.getElementById('subscriptionSection');
+  const subscriptionActive = document.getElementById('subscriptionActive');
+
+  if (subscribeBtn) {
+    subscribeBtn.addEventListener('click', () => {
+      subscribeBtn.disabled = true;
+      subscribeBtn.textContent = '処理中...';
+      chrome.runtime.sendMessage({ type: 'CREATE_SUBSCRIPTION' }, (response) => {
+        if (chrome.runtime.lastError || !response?.success) {
+          subscribeBtn.disabled = false;
+          subscribeBtn.textContent = 'Proプランに登録';
+          alert(response?.error || 'エラーが発生しました');
+          return;
+        }
+        subscribeBtn.textContent = 'PayPalページを開きました';
+      });
+    });
+  }
+
+  function updateSubscriptionUI(subscription) {
+    if (subscription?.status === 'active') {
+      if (subscriptionSection) subscriptionSection.style.display = 'none';
+      if (subscriptionActive) subscriptionActive.style.display = 'block';
+    } else {
+      if (subscriptionSection) subscriptionSection.style.display = 'block';
+      if (subscriptionActive) subscriptionActive.style.display = 'none';
+    }
+  }
+
   // 設定を読み込み
   chrome.storage.local.get([
     'businessType',
@@ -54,7 +93,8 @@ function initPopup() {
     'customAllocations',
     'allocations',
     'freeRemaining',
-    'paidRemaining'
+    'paidRemaining',
+    'hasSubscription'
   ], (result) => {
     if (result.businessType) businessTypeInput.value = result.businessType;
     if (result.industry) industrySelect.value = result.industry;
@@ -76,6 +116,13 @@ function initPopup() {
     if (result.freeRemaining !== undefined || result.paidRemaining !== undefined) {
       updateCreditsDisplay(result.freeRemaining || 0, result.paidRemaining || 0);
     }
+
+    // サブスクリプション状態のキャッシュ表示
+    if (result.hasSubscription) {
+      updateSubscriptionUI({ status: 'active' });
+    } else {
+      updateSubscriptionUI(null);
+    }
   });
 
   // サーバーから最新の残回数を取得
@@ -86,6 +133,7 @@ function initPopup() {
     }
     if (response?.success) {
       updateCreditsDisplay(response.free_remaining, response.paid_remaining);
+      updateSubscriptionUI(response.subscription);
     }
   });
 
