@@ -79,7 +79,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === 'OPEN_PRO_PAGE') {
-    chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('popup.html?source=pro') });
     sendResponse({ success: true });
     return true;
   }
@@ -476,11 +476,11 @@ async function handleExportHistory(request, sendResponse) {
           r.dealId || '',
           r.action,
           new Date(r.timestamp).toISOString(),
-          b.type || '', b.accountItem || '', b.amount || '', csvEscape(b.description || ''), b.date || '', csvEscape(b.partner || ''),
-          a.type || '', a.accountItem || '', a.amount || '', csvEscape(a.description || ''), a.date || '', csvEscape(a.partner || ''),
+          b.type || '', b.accountItem || '', b.amount || '', b.description || '', b.date || '', b.partner || '',
+          a.type || '', a.accountItem || '', a.amount || '', a.description || '', a.date || '', a.partner || '',
           (r.changes || []).join(';'),
-          csvEscape(r.memo || '')
-        ];
+          r.memo || ''
+        ].map(v => csvEscape(String(v)));
         lines.push(row.join(','));
       }
       sendResponse({ success: true, data: lines.join('\n'), format: 'csv' });

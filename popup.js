@@ -11,6 +11,20 @@ const DEFAULT_ALLOCATIONS = [
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ?source=pro パラメータがある場合はURLチェックをスキップ
+  const urlParams = new URLSearchParams(window.location.search);
+  const isProPage = urlParams.get('source') === 'pro';
+
+  if (isProPage) {
+    // Pro導線から開かれた場合: サブスクセクションまでスクロール
+    initPopup();
+    setTimeout(() => {
+      const subSection = document.getElementById('subscriptionSection');
+      if (subSection) subSection.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+    return;
+  }
+
   // 現在のタブURLをチェック
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const url = tabs[0]?.url || '';
