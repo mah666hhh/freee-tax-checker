@@ -376,12 +376,7 @@ function initPopup() {
         dateSpan.className = 'recent-date';
         dateSpan.textContent = dateStr;
 
-        const actionSpan = document.createElement('span');
-        actionSpan.className = record.action === 'create' ? 'recent-action-create' : 'recent-action-edit';
-        actionSpan.textContent = record.action === 'create' ? '新規' : '編集';
-
         header.appendChild(dateSpan);
-        header.appendChild(actionSpan);
         el.appendChild(header);
 
         const changes = record.changes || [];
