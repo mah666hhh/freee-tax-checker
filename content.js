@@ -57,7 +57,8 @@
           changes,
           timestamp: Date.now()
         }, (saveResponse) => {
-          if (saveResponse?.success && saveResponse.recordId) {
+          const effectiveAction = action || (beforeData ? 'edit' : 'create');
+          if (saveResponse?.success && saveResponse.recordId && effectiveAction !== 'create') {
             showMemoInput(saveResponse.recordId);
           }
         });
@@ -690,6 +691,10 @@
                   after: null,
                   changes: Object.keys(beforeData),
                   timestamp: Date.now()
+                }, (saveResponse) => {
+                  if (saveResponse?.success && saveResponse.recordId) {
+                    showMemoInput(saveResponse.recordId);
+                  }
                 });
                 return;
               }
