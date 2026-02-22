@@ -393,7 +393,16 @@ function initPopup() {
         header.appendChild(dateSpan);
         el.appendChild(header);
 
-        const changes = record.changes || [];
+        if (record.action === 'delete') {
+          const row = document.createElement('div');
+          row.className = 'recent-change recent-changed';
+          row.style.color = '#ef5350';
+          const b = record.before || {};
+          row.textContent = `削除: ${b.accountItem || ''} ¥${(b.amount || 0).toLocaleString()}`;
+          el.appendChild(row);
+        }
+
+        const changes = record.action !== 'delete' ? (record.changes || []) : [];
         changes.slice(0, 2).forEach(field => {
           const row = document.createElement('div');
           row.className = 'recent-change recent-changed';

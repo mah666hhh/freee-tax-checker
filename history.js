@@ -116,7 +116,8 @@
   function buildTableRow(record) {
     const tr = document.createElement('tr');
     const changedSet = new Set(record.changes || []);
-    const data = record.after || {};
+    const isDelete = record.action === 'delete';
+    const data = isDelete ? (record.before || {}) : (record.after || {});
 
     // 日時
     const tdDate = document.createElement('td');
@@ -128,8 +129,8 @@
     const tdAction = document.createElement('td');
     tdAction.className = 'col-action';
     const actionSpan = document.createElement('span');
-    actionSpan.className = record.action === 'create' ? 'badge-create' : 'badge-edit';
-    actionSpan.textContent = record.action === 'create' ? '新規' : '編集';
+    actionSpan.className = record.action === 'create' ? 'badge-create' : record.action === 'delete' ? 'badge-delete' : 'badge-edit';
+    actionSpan.textContent = record.action === 'create' ? '新規' : record.action === 'delete' ? '削除' : '編集';
     tdAction.appendChild(actionSpan);
     tr.appendChild(tdAction);
 
@@ -145,7 +146,13 @@
       const val = String(data[field] ?? '');
       const isChanged = changedSet.has(field);
 
-      if (isChanged && record.before) {
+      if (isDelete) {
+        td.className = 'cell-changed';
+        const beforeSpan = document.createElement('span');
+        beforeSpan.className = 'val-before';
+        beforeSpan.textContent = val || '(なし)';
+        td.appendChild(beforeSpan);
+      } else if (isChanged && record.before) {
         td.className = 'cell-changed';
         const beforeSpan = document.createElement('span');
         beforeSpan.className = 'val-before';

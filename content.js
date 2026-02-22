@@ -650,11 +650,71 @@
     });
   }
 
+  // 削除ボタンをフック
+  function hookDeleteButton() {
+    const editors = document.querySelectorAll('.deal-editor[data-testid="deal-editor-INLINE"]');
+    editors.forEach((editorEl) => {
+      const deleteBtn = editorEl.querySelector('.btn-deal-remove');
+      if (!deleteBtn || deleteBtn.dataset.ftcDeleteHooked) return;
+
+      console.log('[freee税務チェッカー] 削除ボタンをフック');
+      deleteBtn.dataset.ftcDeleteHooked = 'true';
+
+      deleteBtn.addEventListener('click', () => {
+        // 削除前のデータをキャプチャ
+        const beforeData = getEditDealData(editorEl);
+        const dealId = getDealIdFromUrl();
+        console.log('[freee税務チェッカー] 削除検知、データキャプチャ:', beforeData);
+
+        // 「取引を削除しました」通知を待って記録
+        const container = document.querySelector('#global-notification');
+        if (!container) return;
+
+        let resolved = false;
+        const observer = new MutationObserver((mutations) => {
+          if (resolved) return;
+          for (const mutation of mutations) {
+            const nodes = mutation.type === 'childList' ? mutation.addedNodes : [mutation.target];
+            for (const node of nodes) {
+              if (node.nodeType !== 1) continue;
+              const msg = node.querySelector?.('.notification-message') || (node.classList?.contains('notification-message') ? node : null);
+              if (msg && msg.textContent?.includes('削除しました')) {
+                resolved = true;
+                observer.disconnect();
+                console.log('[freee税務チェッカー] 削除成功通知検出、履歴記録');
+                chrome.runtime.sendMessage({
+                  type: 'SAVE_HISTORY',
+                  dealId: dealId || null,
+                  action: 'delete',
+                  before: beforeData,
+                  after: null,
+                  changes: Object.keys(beforeData),
+                  timestamp: Date.now()
+                });
+                return;
+              }
+            }
+          }
+        });
+
+        observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            observer.disconnect();
+          }
+        }, 10000);
+      });
+    });
+  }
+
   // DOM監視でフォームの出現を検知
   function observeDOM() {
     const observer = new MutationObserver(() => {
       hookRegisterButton();
       hookSaveButton();
+      hookDeleteButton();
     });
 
     observer.observe(document.body, {
@@ -665,6 +725,7 @@
     // 初回チェック
     hookRegisterButton();
     hookSaveButton();
+    hookDeleteButton();
   }
 
   // 初期化
