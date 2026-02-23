@@ -4,6 +4,7 @@
   'use strict';
 
   const STORAGE_KEY = 'ftcSearchConditions';
+  const FREE_LIMIT = 3;
   let dropdownVisible = false;
 
   console.log('[freee税務チェッカー] search-conditions.js 読み込み完了');
@@ -34,16 +35,77 @@
     }
 
     getConditions((conditions) => {
-      conditions.push({
-        id: generateId(),
-        name: name,
-        hash: hash,
-        createdAt: Date.now()
-      });
-      setConditions(conditions, () => {
-        renderDropdown();
+      chrome.storage.local.get(['hasSubscription'], (result) => {
+        const isPro = !!result.hasSubscription;
+        if (!isPro && conditions.length >= FREE_LIMIT) {
+          showUpgradeDialog();
+          return;
+        }
+        conditions.push({
+          id: generateId(),
+          name: name,
+          hash: hash,
+          createdAt: Date.now()
+        });
+        setConditions(conditions, () => {
+          renderDropdown();
+        });
       });
     });
+  }
+
+  // Proアップグレードダイアログ
+  function showUpgradeDialog() {
+    const overlay = document.createElement('div');
+    overlay.id = 'ftc-sc-upgrade-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.5)', zIndex: '100000',
+      display: 'flex', alignItems: 'center', justifyContent: 'center'
+    });
+
+    const dialog = document.createElement('div');
+    Object.assign(dialog.style, {
+      background: '#fff', borderRadius: '12px', padding: '24px',
+      maxWidth: '360px', width: '90%', textAlign: 'center',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+    });
+
+    const title = document.createElement('div');
+    title.textContent = '検索条件の保存上限に達しました';
+    Object.assign(title.style, { fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '12px' });
+    dialog.appendChild(title);
+
+    const desc = document.createElement('div');
+    desc.textContent = '無料プランでは' + FREE_LIMIT + '件まで保存できます。Proプランにアップグレードすると無制限に保存できます。';
+    Object.assign(desc.style, { fontSize: '13px', color: '#666', marginBottom: '20px', lineHeight: '1.6' });
+    dialog.appendChild(desc);
+
+    const upgradeBtn = document.createElement('button');
+    upgradeBtn.textContent = 'Proプランを見る';
+    Object.assign(upgradeBtn.style, {
+      width: '100%', padding: '12px', background: 'linear-gradient(135deg, #1976d2, #1565c0)',
+      color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px',
+      fontWeight: '700', cursor: 'pointer', marginBottom: '8px'
+    });
+    upgradeBtn.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ type: 'OPEN_PRO_PAGE' });
+      overlay.remove();
+    });
+    dialog.appendChild(upgradeBtn);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '閉じる';
+    Object.assign(closeBtn.style, {
+      width: '100%', padding: '10px', background: '#fff', color: '#666',
+      border: '1px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer'
+    });
+    closeBtn.addEventListener('click', () => overlay.remove());
+    dialog.appendChild(closeBtn);
+
+    overlay.appendChild(dialog);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
   }
 
   // 条件を適用
@@ -139,7 +201,15 @@
 
         const footer = document.createElement('div');
         footer.className = 'ftc-sc-footer';
-        footer.textContent = '保存件数: ' + conditions.length + '件';
+
+        chrome.storage.local.get(['hasSubscription'], (result) => {
+          const isPro = !!result.hasSubscription;
+          if (isPro) {
+            footer.textContent = '保存件数: ' + conditions.length + '件';
+          } else {
+            footer.textContent = conditions.length + ' / ' + FREE_LIMIT + '件' + (conditions.length >= FREE_LIMIT ? '（上限）' : '');
+          }
+        });
         dropdown.appendChild(footer);
       }
     });

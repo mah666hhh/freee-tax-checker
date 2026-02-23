@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "freee取引入力 税務チェッカー",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "freee経費入力時にリアルタイムで税務リスクを警告するChrome拡張",
   "permissions": [
     "storage",
