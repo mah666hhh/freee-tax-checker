@@ -1,0 +1,115 @@
+/* search-conditions.css - 検索条件保存のスタイル */
+
+#ftc-sc-wrapper {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+#ftc-sc-trigger {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #4CAF50, #388E3C);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(56, 142, 60, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#ftc-sc-trigger:hover {
+  opacity: 0.85;
+  box-shadow: 0 2px 8px rgba(56, 142, 60, 0.4);
+}
+
+#ftc-sc-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 260px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 10000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ftc-sc-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.ftc-sc-item:hover {
+  background: #f5f5f5;
+}
+
+.ftc-sc-save {
+  gap: 8px;
+  font-weight: 500;
+  color: #2e7d32;
+}
+
+.ftc-sc-save-icon {
+  font-size: 16px;
+}
+
+.ftc-sc-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 0;
+}
+
+.ftc-sc-condition {
+  justify-content: space-between;
+}
+
+.ftc-sc-condition-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.ftc-sc-delete {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ftc-sc-delete:hover {
+  background: #fee;
+  color: #d32f2f;
+}
+
+.ftc-sc-footer {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #888;
+  text-align: right;
+}

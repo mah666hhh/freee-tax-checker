@@ -17,8 +17,8 @@
   "content_scripts": [
     {
       "matches": ["https://secure.freee.co.jp/deals*"],
-      "js": ["content.js", "deal-filter.js"],
-      "css": ["styles.css", "deal-filter.css"],
+      "js": ["content.js", "deal-filter.js", "search-conditions.js"],
+      "css": ["styles.css", "deal-filter.css", "search-conditions.css"],
       "run_at": "document_idle"
     }
   ],
